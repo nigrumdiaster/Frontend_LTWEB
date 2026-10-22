@@ -1,0 +1,31 @@
+const test = require('node:test');
+const assert = require('node:assert/strict');
+const fs = require('node:fs');
+const vm = require('node:vm');
+const path = require('node:path');
+const source = fs.readFileSync(path.join(__dirname, '../js/admin/announcements.js'), 'utf8');
+
+for (const id of ['', '42']) {
+    for (const audience of ['ALL', 'ROLE_STUDENT', 'ROLE_LECTURER', 'ROLE_ADMIN']) {
+        test(`${id ? 'update' : 'create'} announcement for ${audience}`, async () => {
+            let sent;
+            const context = {
+                document: {
+                    addEventListener() {},
+                    getElementById: name => ({value: name === 'announcementId' ? id : name === 'announcementTargetRole' ? audience : 'Example', checked: false})
+                },
+                showAlert: async () => {},
+                console
+            };
+            vm.createContext(context);
+            vm.runInContext(source, context);
+            context.requestAnnouncementApi = async (url, options) => {sent = {url, options}; return {success: true};};
+            context.closeAnnouncementModal = () => {};
+            context.loadAnnouncements = async () => {};
+            await context.saveAnnouncement({preventDefault() {}});
+            assert.ok(sent, 'Request must be sent');
+            assert.equal(JSON.parse(sent.options.body).targetRole, audience === 'ALL' ? null : audience);
+            assert.equal(sent.options.method, id ? 'PUT' : 'POST');
+        });
+    }
+}

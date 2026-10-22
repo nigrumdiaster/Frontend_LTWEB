@@ -139,10 +139,11 @@ async function openEditAnnouncement(id) {
 async function saveAnnouncement(event) {
     event.preventDefault();
     const id = document.getElementById('announcementId').value;
+    const targetRole = document.getElementById('announcementTargetRole').value;
     const payload = {
         title: document.getElementById('announcementTitle').value.trim(),
         content: document.getElementById('announcementContent').value,
-        targetRole: document.getElementById('announcementTargetRole').value,
+        targetRole: targetRole === 'ALL' ? null : targetRole,
         isPinned: document.getElementById('announcementIsPinned').checked,
         fileUrl: document.getElementById('announcementFileUrl').value.trim()
     };
