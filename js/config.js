@@ -254,3 +254,76 @@ if (document.readyState === 'loading') {
 } else {
     initializeSearchableSelects();
 }
+
+function initializeResponsiveLayout() {
+    const sidebar = document.querySelector('.sidebar');
+    if (sidebar) {
+        sidebar.id ||= 'portal-navigation';
+        const toolbar = document.createElement('div');
+        toolbar.className = 'mobile-toolbar';
+        const toggle = document.createElement('button');
+        toggle.type = 'button';
+        toggle.className = 'mobile-menu-toggle';
+        toggle.textContent = '☰ Menu';
+        toggle.setAttribute('aria-controls', sidebar.id);
+        toggle.setAttribute('aria-expanded', 'false');
+        toolbar.append(toggle);
+        document.body.prepend(toolbar);
+        const backdrop = document.createElement('div');
+        backdrop.className = 'sidebar-backdrop';
+        backdrop.hidden = true;
+        document.body.append(backdrop);
+        const mobile = matchMedia('(max-width: 960px)');
+        function setOpen(open, restoreFocus = false) {
+            document.body.classList.toggle('navigation-open', open);
+            toggle.setAttribute('aria-expanded', String(open));
+            backdrop.hidden = !open;
+            sidebar.inert = mobile.matches && !open;
+            if (open) sidebar.querySelector('a, button')?.focus();
+            else if (restoreFocus) toggle.focus();
+        }
+        toggle.addEventListener('click', () => setOpen(toggle.getAttribute('aria-expanded') !== 'true'));
+        backdrop.addEventListener('click', () => setOpen(false, true));
+        sidebar.addEventListener('click', event => {
+            if (event.target.closest('a') && mobile.matches) setOpen(false);
+        });
+        document.addEventListener('keydown', event => {
+            if (!document.body.classList.contains('navigation-open')) return;
+            if (event.key === 'Escape') setOpen(false, true);
+            if (event.key === 'Tab') {
+                const links = [...sidebar.querySelectorAll('a[href], button:not(:disabled)')]
+                    .filter(element => element.getClientRects().length);
+                const first = links[0], last = links.at(-1);
+                if (event.shiftKey && document.activeElement === first) {
+                    event.preventDefault(); toggle.focus();
+                } else if (!event.shiftKey && document.activeElement === last) {
+                    event.preventDefault(); toggle.focus();
+                } else if (document.activeElement === toggle) {
+                    event.preventDefault(); (event.shiftKey ? last : first)?.focus();
+                }
+            }
+        });
+        mobile.addEventListener('change', () => setOpen(false));
+        setOpen(false);
+    }
+    function wrapTables() {
+        document.querySelectorAll('.main-wrapper table, .modal table').forEach(table => {
+            if (table.closest('.table-scroll')) return;
+            const scroll = document.createElement('div');
+            scroll.className = 'table-scroll';
+            scroll.tabIndex = 0;
+            scroll.setAttribute('role', 'region');
+            scroll.setAttribute('aria-label', 'Bảng dữ liệu, cuộn ngang để xem thêm');
+            table.before(scroll);
+            scroll.append(table);
+        });
+    }
+    wrapTables();
+    new MutationObserver(wrapTables).observe(document.body, {childList: true, subtree: true});
+}
+
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initializeResponsiveLayout, {once: true});
+} else {
+    initializeResponsiveLayout();
+}
