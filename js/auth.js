@@ -85,7 +85,7 @@ async function handleLogin(e) {
                 authenticatedUser = profileResult.data;
             }
             localStorage.setItem('user', JSON.stringify(authenticatedUser));
-            await showAlert('Đăng nhập thành công!');
+            queueToastAfterRedirect('Đăng nhập thành công!');
             window.location.href = getHomePageByRole(authenticatedUser.role);
         } else {
             await showAlert(result.message || 'Tên đăng nhập hoặc mật khẩu không chính xác!');
@@ -137,7 +137,7 @@ async function handleRegister(e) {
         const result = await response.json();
 
         if (response.ok && result.success) {
-            await showAlert('Đăng ký tài khoản thành công! Hãy đăng nhập.');
+            queueToastAfterRedirect('Đăng ký tài khoản thành công! Hãy đăng nhập.');
             window.location.href = 'index.html';
         } else {
             const errors = result.data && typeof result.data === 'object'

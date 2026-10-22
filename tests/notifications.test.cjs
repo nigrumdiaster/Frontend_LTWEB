@@ -36,7 +36,7 @@ test('a second dialog waits for the first dialog to close', async () => {
     const opened = [];
     let closeFirst;
     const app = setup(options => {
-        opened.push(options.text);
+        opened.push(options.text || options.titleText);
         if (opened.length === 1) return new Promise(resolve => {closeFirst = resolve;});
         return Promise.resolve({isConfirmed: true});
     });
@@ -48,4 +48,16 @@ test('a second dialog waits for the first dialog to close', async () => {
     assert.equal(await first, false);
     await second;
     assert.deepEqual(opened, ['First', 'Second']);
+});
+
+test('success notifications are timed corner toasts with no confirm button', async () => {
+    const app = setup(async options => {
+        assert.equal(options.toast, true);
+        assert.equal(options.position, 'top-end');
+        assert.equal(options.showConfirmButton, false);
+        assert.equal(options.timer, 3000);
+        assert.equal(options.titleText, 'Đăng nhập thành công!');
+        return {isDismissed: true};
+    });
+    await app.showAlert('Đăng nhập thành công!');
 });
