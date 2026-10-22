@@ -1,5 +1,6 @@
 // Global Event Listener
 document.addEventListener('DOMContentLoaded', async () => {
+    if (await redirectAuthenticatedVisitor()) return;
     // 1. Khởi tạo sự kiện Form Login
     const loginForm = document.getElementById('loginForm');
     if (loginForm) {
@@ -19,6 +20,64 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (changePasswordForm) {
         changePasswordForm.addEventListener('submit', handleChangePassword);
     }
+});
+
+let checkingGuestSession = null;
+
+function redirectAuthenticatedVisitor() {
+    const forms = [...document.querySelectorAll('#loginForm, #registerForm')];
+    if (!forms.length) return Promise.resolve(false);
+    if (checkingGuestSession) return checkingGuestSession;
+    const token = localStorage.getItem('token');
+    if (!token) return Promise.resolve(false);
+
+    const status = document.getElementById('guestSessionStatus') || document.createElement('p');
+    status.id = 'guestSessionStatus';
+    status.setAttribute('role', 'status');
+    status.textContent = 'Đang kiểm tra phiên đăng nhập…';
+    forms[0].before(status);
+    forms.forEach(form => { form.inert = true; form.setAttribute('aria-busy', 'true'); });
+    checkingGuestSession = (async () => {
+        let redirecting = false;
+        try {
+            // Use fetch directly: an expired session should not navigate between guest pages.
+            const response = await fetch(`${API_BASE_URL}/auth/me`, {
+                headers: {Authorization: `Bearer ${token}`},
+                cache: 'no-store'
+            });
+            if (localStorage.getItem('token') !== token) return false;
+            if (response.status === 401 || response.status === 403) {
+                localStorage.removeItem('token');
+                localStorage.removeItem('user');
+                status.textContent = 'Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.';
+                return false;
+            }
+            const result = await response.json();
+            const user = result.data;
+            if (!response.ok || !result.success || !user ||
+                !['ROLE_STUDENT', 'ROLE_LECTURER', 'ROLE_ADMIN', 'ROLE_DEAN', 'ROLE_DEPARTMENT_HEAD'].includes(user.role)) {
+                throw new Error('Session verification failed');
+            }
+            localStorage.setItem('user', JSON.stringify(user));
+            redirecting = true;
+            window.location.replace(getHomePageByRole(user.role));
+            return true;
+        } catch {
+            status.textContent = 'Chưa thể kiểm tra phiên đăng nhập. Vui lòng tải lại trang hoặc thử đăng nhập lại.';
+            return false;
+        } finally {
+            if (!redirecting) forms.forEach(form => { form.inert = false; form.removeAttribute('aria-busy'); });
+            checkingGuestSession = null;
+        }
+    })();
+    return checkingGuestSession;
+}
+
+window.addEventListener('pageshow', event => {
+    if (event.persisted) redirectAuthenticatedVisitor();
+});
+window.addEventListener('storage', event => {
+    if (event.key === 'token' && event.newValue) redirectAuthenticatedVisitor();
 });
 
 async function loadRegisterDepartments() {
