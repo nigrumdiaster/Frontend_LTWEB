@@ -266,29 +266,33 @@
 
     <!-- MODAL CHUYỂN TRẠNG THÁI -->
     <div id="statusModal" class="modal">
-        <div class="modal-content" style="max-width: 400px;">
+        <div class="modal-content" style="max-width: 560px;">
             <div class="modal-header">
                 <h3>Chuyển Trạng Thái Đợt</h3>
             </div>
             <form id="statusForm">
                 <input type="hidden" id="statusPeriodId">
+                <p id="statusPeriodName" style="font-weight: 600; margin-bottom: 12px;"></p>
+                <p style="margin-bottom: 20px;">Trạng thái hiện tại: <strong id="currentPeriodStatus"></strong></p>
                 <div class="form-group" style="margin-bottom: 20px;">
-                    <label>Trạng thái mới (*)</label>
-                    <select id="updateStatusSelect" required>
-                        <option value="DRAFT">Nháp (DRAFT)</option>
-                        <option value="PHASE1_LECTURER_REGISTRATION">ĐK Giảng viên (PHASE1)</option>
-                        <option value="PHASE1_REVIEWING">Duyệt đề tài GV (PHASE1_REVIEWING)</option>
-                        <option value="PHASE2_STUDENT_REGISTRATION">ĐK Sinh viên (PHASE2)</option>
-                        <option value="IN_PROGRESS">Đang thực hiện (IN_PROGRESS)</option>
-                        <option value="REVIEWING">Đang phản biện (REVIEWING)</option>
-                        <option value="DEFENSE">Bảo vệ hội đồng (DEFENSE)</option>
-                        <option value="COMPLETED">Hoàn thành (COMPLETED)</option>
-                        <option value="CANCELLED">Đã hủy (CANCELLED)</option>
+                    <label for="updateStatusSelect">Chuyển sang trạng thái</label>
+                    <select id="updateStatusSelect" data-native-select required aria-describedby="statusChangeHint" onchange="updateStatusChoice()" style="min-height: 48px; font-size: 16px;">
+                        <option value="" disabled selected>Chọn trạng thái mới…</option>
+                        <option value="DRAFT">Nháp</option>
+                        <option value="PHASE1_LECTURER_REGISTRATION">Mở đăng ký đề tài cho giảng viên</option>
+                        <option value="PHASE1_REVIEWING">Duyệt đề tài giảng viên</option>
+                        <option value="PHASE2_STUDENT_REGISTRATION">Mở đăng ký cho sinh viên</option>
+                        <option value="IN_PROGRESS">Đang thực hiện</option>
+                        <option value="REVIEWING">Đang phản biện</option>
+                        <option value="DEFENSE">Bảo vệ hội đồng</option>
+                        <option value="COMPLETED">Hoàn thành</option>
+                        <option value="CANCELLED">Hủy đợt</option>
                     </select>
+                    <p id="statusChangeHint" role="status" style="margin-top: 12px; color: #64748b;">Chọn một trạng thái khác để cập nhật.</p>
                 </div>
                 <div style="display: flex; gap: 8px; justify-content: flex-end;">
                     <button type="button" onclick="closeModal('statusModal')" class="btn btn-secondary">Hủy</button>
-                    <button type="submit" class="btn btn-primary">Cập Nhật Trạng Thái</button>
+                    <button id="saveStatusButton" type="submit" class="btn btn-primary" disabled>Cập nhật trạng thái</button>
                 </div>
             </form>
         </div>

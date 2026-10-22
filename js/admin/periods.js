@@ -263,16 +263,39 @@ async function handleEditRegistrationPeriod(e) {
 }
 
 // 5. PATCH /api/registration-periods/{id}/status
+let currentPeriodStatus = '';
+let savingPeriodStatus = false;
+
 function openStatusModal(id, currentStatus) {
+    if (savingPeriodStatus) return;
+    currentPeriodStatus = currentStatus;
     document.getElementById('statusPeriodId').value = id;
-    document.getElementById('updateStatusSelect').value = currentStatus;
+    const select = document.getElementById('updateStatusSelect');
+    [...select.options].forEach(option => { option.disabled = !option.value || option.value === currentStatus; });
+    document.getElementById('currentPeriodStatus').textContent = [...select.options].find(option => option.value === currentStatus)?.textContent || currentStatus;
+    document.getElementById('statusPeriodName').textContent = periodDeleteLabels.get(String(id)) || 'Đợt đăng ký';
+    select.value = '';
+    updateStatusChoice();
     document.getElementById('statusModal').style.display = 'flex';
+    select.focus();
+}
+
+function updateStatusChoice() {
+    const select = document.getElementById('updateStatusSelect');
+    const changed = Boolean(select.value) && select.value !== currentPeriodStatus;
+    document.getElementById('saveStatusButton').disabled = savingPeriodStatus || !changed;
+    document.getElementById('statusChangeHint').textContent = changed
+        ? `Sẽ chuyển sang: ${select.selectedOptions[0].textContent}.`
+        : 'Chọn một trạng thái khác để cập nhật.';
 }
 
 async function handleUpdateStatus(e) {
     e.preventDefault();
     const id = document.getElementById('statusPeriodId').value;
     const newStatus = document.getElementById('updateStatusSelect').value;
+    if (savingPeriodStatus || !newStatus || newStatus === currentPeriodStatus) return;
+    savingPeriodStatus = true;
+    updateStatusChoice();
 
     try {
         const response = await apiFetch(`/registration-periods/${id}/status`, {
@@ -294,6 +317,10 @@ async function handleUpdateStatus(e) {
         }
     } catch (error) {
         console.error('Lỗi PATCH status:', error);
+        await showAlert('Không thể cập nhật trạng thái. Vui lòng thử lại.', 'error');
+    } finally {
+        savingPeriodStatus = false;
+        updateStatusChoice();
     }
 }
 

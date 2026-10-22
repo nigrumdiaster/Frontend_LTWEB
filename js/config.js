@@ -80,6 +80,7 @@ function normalizeSelectSearchText(value) {
 }
 
 function enhanceSelect(select) {
+    if (select.hasAttribute('data-native-select')) return;
     if (select.closest('.swal2-container')) return;
     if (select.dataset.searchableSelect === 'true' || select.multiple) return;
     select.dataset.searchableSelect = 'true';
