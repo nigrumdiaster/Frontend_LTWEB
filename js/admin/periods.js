@@ -92,7 +92,11 @@ async function loadRegistrationPeriods() {
     }
 }
 
+const periodDeleteLabels = new Map();
+
 function renderRegistrationPeriodsTable(periods) {
+    periodDeleteLabels.clear();
+    (periods || []).forEach(period => periodDeleteLabels.set(String(period.id), period.name));
     const tbody = document.getElementById('periodTableBody');
     if (!tbody) return;
 
@@ -295,7 +299,8 @@ async function handleUpdateStatus(e) {
 
 // 6. DELETE /api/registration-periods/{id}
 async function deleteRegistrationPeriod(id) {
-    if (!(await confirmAction(`Bạn có chắc chắn muốn xóa đợt đăng ký ID = ${id}?`))) return;
+    const name = periodDeleteLabels.get(String(id));
+    if (!(await confirmAction(`Bạn có chắc chắn muốn xóa đợt đăng ký ${name ? `“${name}”` : 'này'}?`))) return;
 
     try {
         const response = await apiFetch(`/registration-periods/${id}`, {

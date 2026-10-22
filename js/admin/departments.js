@@ -67,7 +67,11 @@ async function loadDepartments() {
 }
 
 // 2. Render dữ liệu vào thẻ <tbody>
+const departmentDeleteLabels = new Map();
+
 function renderDepartmentsTable(departments) {
+    departmentDeleteLabels.clear();
+    (departments || []).forEach(department => departmentDeleteLabels.set(String(department.id), department.name || department.code));
     const tbody = document.getElementById('deptTableBody');
     if (!tbody) return;
 
@@ -200,7 +204,8 @@ async function handleEditDepartment(e) {
 
 // 6. DELETE /api/departments/{id} - Xóa bộ môn
 async function deleteDepartment(id) {
-    if (!(await confirmAction(`Bạn có chắc chắn muốn xóa bộ môn ID = ${id}?`))) return;
+    const name = departmentDeleteLabels.get(String(id));
+    if (!(await confirmAction(`Bạn có chắc chắn muốn xóa bộ môn ${name ? `“${name}”` : 'này'}?`))) return;
 
     try {
         const response = await apiFetch(`/departments/${id}`, {

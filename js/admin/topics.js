@@ -484,7 +484,11 @@ async function loadTopics() {
     }
 }
 
+const topicDeleteLabels = new Map();
+
 function renderTopicsTable(topics) {
+    topicDeleteLabels.clear();
+    (topics || []).forEach(topic => topicDeleteLabels.set(String(topic.id), topic.titleVi || topic.titleEn || topic.code));
     const tbody = document.getElementById('topicTableBody');
     if (!tbody) return;
 
@@ -699,7 +703,8 @@ async function handleApproval(e) {
 
 // 6. DELETE /api/topics/{id} - Xóa đề tài
 async function deleteTopic(id) {
-    if (!(await confirmAction(`Bạn có chắc muốn xóa đề tài ID = ${id}?`))) return;
+    const name = topicDeleteLabels.get(String(id));
+    if (!(await confirmAction(`Bạn có chắc muốn xóa đề tài ${name ? `“${name}”` : 'này'}?`))) return;
 
     try {
         const response = await apiFetch(`/topics/${id}`, {

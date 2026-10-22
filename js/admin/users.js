@@ -123,7 +123,12 @@ async function loadUsers() {
     }
 }
 
+const userDeleteLabels = new Map();
+
 function renderUserTable(users) {
+    userDeleteLabels.clear();
+    (users || []).forEach(user => userDeleteLabels.set(String(user.id),
+        user.fullName && user.username ? `${user.fullName} (${user.username})` : user.fullName || user.username || user.code));
     const tbody = document.getElementById('userTableBody');
     if (!tbody) return;
 
@@ -281,7 +286,8 @@ async function handleSaveUser(e) {
 }
 
 async function deleteUser(id) {
-    if (!(await confirmAction(`Bạn có chắc chắn muốn xóa tài khoản ID = ${id}?`))) return;
+    const name = userDeleteLabels.get(String(id));
+    if (!(await confirmAction(`Bạn có chắc chắn muốn xóa tài khoản ${name ? `“${name}”` : 'này'}?`))) return;
 
     try {
         const response = await apiFetch(`/users/${id}`, {
