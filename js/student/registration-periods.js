@@ -93,11 +93,11 @@ async function showPeriodDetail(id) {
         openPeriodModal();
     } catch (error) {
         console.error('Lỗi tải chi tiết đợt:', error);
-        alert(error.message || 'Lỗi kết nối máy chủ!');
+        await showAlert(error.message || 'Lỗi kết nối máy chủ!');
     }
 }
 
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
     document.getElementById('btnResetFilters').addEventListener('click', () => {
         document.getElementById('typeFilter').value = '';
         document.getElementById('statusFilter').value = '';
@@ -113,7 +113,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const errorEl = document.getElementById('periodLoadError');
 
     if (!localStorage.getItem('token')) {
-        alert('Bạn chưa đăng nhập!');
+        await showAlert('Bạn chưa đăng nhập!');
         window.location.href = '../index.html';
         return;
     }

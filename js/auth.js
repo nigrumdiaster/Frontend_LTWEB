@@ -85,14 +85,14 @@ async function handleLogin(e) {
                 authenticatedUser = profileResult.data;
             }
             localStorage.setItem('user', JSON.stringify(authenticatedUser));
-            alert('Đăng nhập thành công!');
+            await showAlert('Đăng nhập thành công!');
             window.location.href = getHomePageByRole(authenticatedUser.role);
         } else {
-            alert(result.message || 'Tên đăng nhập hoặc mật khẩu không chính xác!');
+            await showAlert(result.message || 'Tên đăng nhập hoặc mật khẩu không chính xác!');
         }
     } catch (error) {
         console.error('Lỗi khi đăng nhập:', error);
-        alert(error.message || 'Không thể kết nối đến máy chủ Backend (http://localhost:8080)!');
+        await showAlert(error.message || 'Không thể kết nối đến máy chủ Backend (http://localhost:8080)!');
     }
 }
 
@@ -137,17 +137,17 @@ async function handleRegister(e) {
         const result = await response.json();
 
         if (response.ok && result.success) {
-            alert('Đăng ký tài khoản thành công! Hãy đăng nhập.');
+            await showAlert('Đăng ký tài khoản thành công! Hãy đăng nhập.');
             window.location.href = 'index.html';
         } else {
             const errors = result.data && typeof result.data === 'object'
                 ? Object.values(result.data).filter(value => typeof value === 'string')
                 : [];
-            alert(errors.length ? errors.join('\n') : result.message || 'Đăng ký thất bại!');
+            await showAlert(errors.length ? errors.join('\n') : result.message || 'Đăng ký thất bại!');
         }
     } catch (error) {
         console.error('Lỗi khi đăng ký:', error);
-        alert('Lỗi kết nối máy chủ!');
+        await showAlert('Lỗi kết nối máy chủ!');
     }
 }
 
@@ -173,7 +173,7 @@ function toggleStudentClassInput() {
 async function loadUserProfile() {
     const token = localStorage.getItem('token');
     if (!token) {
-        alert('Bạn chưa đăng nhập!');
+        await showAlert('Bạn chưa đăng nhập!');
         window.location.href = 'index.html';
         return;
     }
@@ -212,7 +212,7 @@ async function loadUserProfile() {
         });
     } catch (error) {
         console.error('Lỗi tải thông tin cá nhân:', error);
-        alert(error.message || 'Không thể tải thông tin cá nhân.');
+        await showAlert(error.message || 'Không thể tải thông tin cá nhân.');
     }
 }
 
@@ -223,7 +223,7 @@ async function handleChangePassword(e) {
     e.preventDefault();
     const token = localStorage.getItem('token');
     if (!token) {
-        alert('Phiên làm việc hết hạn!');
+        await showAlert('Phiên làm việc hết hạn!');
         logout();
         return;
     }
@@ -241,15 +241,15 @@ async function handleChangePassword(e) {
         const result = await response.json();
 
         if (response.ok && result.success) {
-            alert('Đổi mật khẩu thành công!');
+            await showAlert('Đổi mật khẩu thành công!');
             closePasswordModal();
             document.getElementById('changePasswordForm').reset();
         } else {
-            alert(result.message || 'Đổi mật khẩu thất bại!');
+            await showAlert(result.message || 'Đổi mật khẩu thất bại!');
         }
     } catch (error) {
         console.error('Lỗi đổi mật khẩu:', error);
-        alert(error.message || 'Không thể đổi mật khẩu. Vui lòng thử lại.');
+        await showAlert(error.message || 'Không thể đổi mật khẩu. Vui lòng thử lại.');
     }
 }
 

@@ -72,11 +72,11 @@ async function showAnnouncement(id) {
         openAnnouncementModal();
     } catch (error) {
         console.error('Lỗi tải thông báo:', error);
-        alert(error.message || 'Lỗi kết nối máy chủ!');
+        await showAlert(error.message || 'Lỗi kết nối máy chủ!');
     }
 }
 
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
     document.getElementById('btnResetFilters').addEventListener('click', () => {
         document.getElementById('annSearch').value = '';
         render();
@@ -87,7 +87,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const errorEl = document.getElementById('annLoadError');
 
     if (!localStorage.getItem('token')) {
-        alert('Bạn chưa đăng nhập!');
+        await showAlert('Bạn chưa đăng nhập!');
         window.location.href = '../index.html';
         return;
     }

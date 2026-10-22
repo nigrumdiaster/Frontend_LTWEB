@@ -40,7 +40,7 @@ async function showTopicDetail(id) {
         const response = await apiFetch('/topics/' + id);
         const result = await response.json();
         if (!response.ok || !result.data) {
-            alert(result.message || 'Không thể tải chi tiết đề tài.');
+            await showAlert(result.message || 'Không thể tải chi tiết đề tài.');
             return;
         }
         const t = result.data;
@@ -70,7 +70,7 @@ async function showTopicDetail(id) {
         openTopicModal();
     } catch (e) {
         console.error('Lỗi xem chi tiết đề tài:', e);
-        alert('Có lỗi xảy ra khi tải chi tiết đề tài.');
+        await showAlert('Có lỗi xảy ra khi tải chi tiết đề tài.');
     }
 }
 

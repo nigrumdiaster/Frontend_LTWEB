@@ -532,11 +532,11 @@ async function handleCreateTopic(e) {
     const periodVal = document.getElementById('createPeriodId').value;
     const deptVal = document.getElementById('createDepartmentId').value;
     if (!periodVal) {
-        alert('Vui lòng chọn đợt đăng ký!');
+        await showAlert('Vui lòng chọn đợt đăng ký!');
         return;
     }
     if (!deptVal) {
-        alert('Vui lòng chọn bộ môn!');
+        await showAlert('Vui lòng chọn bộ môn!');
         return;
     }
 
@@ -565,12 +565,12 @@ async function handleCreateTopic(e) {
 
         const result = await response.json();
         if (response.ok && result.success) {
-            alert('✅ Gửi đề xuất đề tài thành công!');
+            await showAlert('✅ Gửi đề xuất đề tài thành công!');
             closeModal('createTopicModal');
             document.getElementById('createTopicForm').reset();
             loadTopics();
         } else {
-            alert(result.message || 'Thất bại!');
+            await showAlert(result.message || 'Thất bại!');
         }
     } catch (error) {
         console.error('Lỗi POST /api/topics:', error);
@@ -612,7 +612,7 @@ async function handleEditTopic(e) {
     const id = document.getElementById('editTopicId').value;
     const deptVal = document.getElementById('editDepartmentId').value;
     if (!deptVal) {
-        alert('Vui lòng chọn bộ môn!');
+        await showAlert('Vui lòng chọn bộ môn!');
         return;
     }
 
@@ -640,11 +640,11 @@ async function handleEditTopic(e) {
 
         const result = await response.json();
         if (response.ok && result.success) {
-            alert('✅ Cập nhật thông tin đề tài thành công!');
+            await showAlert('✅ Cập nhật thông tin đề tài thành công!');
             closeModal('editTopicModal');
             loadTopics();
         } else {
-            alert(result.message || 'Cập nhật thất bại!');
+            await showAlert(result.message || 'Cập nhật thất bại!');
         }
     } catch (error) {
         console.error('Lỗi PUT /api/topics/{id}:', error);
@@ -686,11 +686,11 @@ async function handleApproval(e) {
 
         const result = await response.json();
         if (response.ok && result.success) {
-            alert('✅ Đã cập nhật trạng thái phê duyệt!');
+            await showAlert('✅ Đã cập nhật trạng thái phê duyệt!');
             closeModal('approvalModal');
             loadTopics();
         } else {
-            alert(result.message || 'Cập nhật thất bại!');
+            await showAlert(result.message || 'Cập nhật thất bại!');
         }
     } catch (error) {
         console.error('Lỗi PATCH approval:', error);
@@ -699,7 +699,7 @@ async function handleApproval(e) {
 
 // 6. DELETE /api/topics/{id} - Xóa đề tài
 async function deleteTopic(id) {
-    if (!confirm(`Bạn có chắc muốn xóa đề tài ID = ${id}?`)) return;
+    if (!(await confirmAction(`Bạn có chắc muốn xóa đề tài ID = ${id}?`))) return;
 
     try {
         const response = await apiFetch(`/topics/${id}`, {
@@ -709,10 +709,10 @@ async function deleteTopic(id) {
 
         const result = await response.json();
         if (response.ok && result.success) {
-            alert('✅ Đã xóa đề tài!');
+            await showAlert('✅ Đã xóa đề tài!');
             loadTopics();
         } else {
-            alert(result.message || 'Xóa thất bại!');
+            await showAlert(result.message || 'Xóa thất bại!');
         }
     } catch (error) {
         console.error('Lỗi DELETE /api/topics/{id}:', error);

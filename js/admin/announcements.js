@@ -140,7 +140,7 @@ async function openEditAnnouncement(id) {
         document.getElementById('announcementModal').style.display = 'flex';
     } catch (error) {
         console.error('Lỗi tải thông báo cần sửa:', error);
-        alert(error.message || 'Không thể tải thông báo cần sửa.');
+        await showAlert(error.message || 'Không thể tải thông báo cần sửa.');
     }
 }
 
@@ -164,25 +164,25 @@ async function saveAnnouncement(event) {
             }
         );
         closeAnnouncementModal();
-        alert(result.message || (id ? 'Cập nhật thông báo thành công.' : 'Đăng thông báo thành công.'));
+        await showAlert(result.message || (id ? 'Cập nhật thông báo thành công.' : 'Đăng thông báo thành công.'));
         await loadAnnouncements();
     } catch (error) {
         console.error('Lỗi lưu thông báo:', error);
-        alert(error.message || 'Không thể lưu thông báo.');
+        await showAlert(error.message || 'Không thể lưu thông báo.');
     }
 }
 
 async function deleteAnnouncement(id) {
-    if (!confirm('Bạn có chắc chắn muốn xóa thông báo này?')) return;
+    if (!(await confirmAction('Bạn có chắc chắn muốn xóa thông báo này?'))) return;
     try {
         const result = await requestAnnouncementApi(`/api/announcements/${encodeURIComponent(id)}`, {
             method: 'DELETE'
         });
-        alert(result.message || 'Xóa thông báo thành công.');
+        await showAlert(result.message || 'Xóa thông báo thành công.');
         await loadAnnouncements();
     } catch (error) {
         console.error('Lỗi xóa thông báo:', error);
-        alert(error.message || 'Không thể xóa thông báo.');
+        await showAlert(error.message || 'Không thể xóa thông báo.');
     }
 }
 
@@ -209,7 +209,7 @@ async function viewAnnouncement(id) {
         document.getElementById('viewAnnouncementModal').style.display = 'flex';
     } catch (error) {
         console.error('Lỗi xem chi tiết thông báo:', error);
-        alert(error.message || 'Không thể tải chi tiết thông báo.');
+        await showAlert(error.message || 'Không thể tải chi tiết thông báo.');
     }
 }
 

@@ -512,7 +512,7 @@ function toggleMemberSelection(id, event) {
         selectedMemberIds.splice(index, 1);
     } else {
         if (selectedMemberIds.length >= 3) {
-            alert('Hội đồng chỉ được có tối đa 3 Ủy viên (tổng quy mô hội đồng tối đa 5 người bao gồm Chủ tịch, Thư ký và tối đa 3 Ủy viên).');
+            showAlert('Hội đồng chỉ được có tối đa 3 Ủy viên (tổng quy mô hội đồng tối đa 5 người bao gồm Chủ tịch, Thư ký và tối đa 3 Ủy viên).');
             return;
         }
         selectedMemberIds.push(id);
@@ -631,31 +631,31 @@ async function createCouncil(event) {
     const memberIds = [...selectedMemberIds];
 
     if (!periodId) {
-        alert('Vui lòng chọn đợt đăng ký.');
+        await showAlert('Vui lòng chọn đợt đăng ký.');
         return;
     }
     if (!chairmanId) {
-        alert('Vui lòng chọn Chủ tịch hội đồng.');
+        await showAlert('Vui lòng chọn Chủ tịch hội đồng.');
         return;
     }
     if (!secretaryId) {
-        alert('Vui lòng chọn Thư ký hội đồng.');
+        await showAlert('Vui lòng chọn Thư ký hội đồng.');
         return;
     }
     if (chairmanId === secretaryId) {
-        alert('Chủ tịch và Thư ký phải là hai giảng viên khác nhau.');
+        await showAlert('Chủ tịch và Thư ký phải là hai giảng viên khác nhau.');
         return;
     }
     if (memberIds.includes(chairmanId) || memberIds.includes(secretaryId)) {
-        alert('Chủ tịch, Thư ký và Ủy viên phải là các giảng viên khác nhau.');
+        await showAlert('Chủ tịch, Thư ký và Ủy viên phải là các giảng viên khác nhau.');
         return;
     }
     if (memberIds.length === 0) {
-        alert('Hội đồng phải có ít nhất 1 Ủy viên (tổng quy mô hội đồng từ 3 đến 5 người).');
+        await showAlert('Hội đồng phải có ít nhất 1 Ủy viên (tổng quy mô hội đồng từ 3 đến 5 người).');
         return;
     }
     if (memberIds.length > 3) {
-        alert('Hội đồng chỉ được có tối đa 3 Ủy viên.');
+        await showAlert('Hội đồng chỉ được có tối đa 3 Ủy viên.');
         return;
     }
 
@@ -690,7 +690,7 @@ async function createCouncil(event) {
         await loadCouncils();
     } catch (error) {
         console.error('Lỗi POST tạo hội đồng:', error);
-        alert(error.message || 'Không thể thành lập hội đồng.');
+        await showAlert(error.message || 'Không thể thành lập hội đồng.');
     }
 }
 
@@ -740,7 +740,7 @@ async function viewCouncilDetail(councilId) {
         document.getElementById('councilDetailModal').style.display = 'flex';
     } catch (error) {
         console.error('Lỗi GET chi tiết hội đồng:', error);
-        alert(error.message || 'Không thể tải chi tiết hội đồng.');
+        await showAlert(error.message || 'Không thể tải chi tiết hội đồng.');
     }
 }
 
@@ -781,7 +781,7 @@ async function openAssignTopicsModal(councilId) {
         document.getElementById('assignTopicsModal').style.display = 'flex';
     } catch (error) {
         console.error('Lỗi mở modal gán đề tài:', error);
-        alert(error.message || 'Không thể mở form gán đề tài.');
+        await showAlert(error.message || 'Không thể mở form gán đề tài.');
     }
 }
 
@@ -792,7 +792,7 @@ async function assignTopics(event) {
         .map(input => Number.parseInt(input.value, 10));
     const defenseTime = document.getElementById('assignDefenseTime').value;
     if (!defenseTime) {
-        alert('Vui lòng chọn thời gian bảo vệ.');
+        await showAlert('Vui lòng chọn thời gian bảo vệ.');
         return;
     }
     const payload = {
@@ -816,7 +816,7 @@ async function assignTopics(event) {
         await loadCouncils();
     } catch (error) {
         console.error('Lỗi POST gán đề tài:', error);
-        alert(error.message || 'Không thể gán đề tài cho hội đồng.');
+        await showAlert(error.message || 'Không thể gán đề tài cho hội đồng.');
     }
 }
 

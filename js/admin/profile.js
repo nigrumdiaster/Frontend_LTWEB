@@ -92,7 +92,7 @@
         const newPassword = document.getElementById('newPassword').value;
 
         if (newPassword.length < 6) {
-            alert('Mật khẩu mới phải có ít nhất 6 ký tự.');
+            await showAlert('Mật khẩu mới phải có ít nhất 6 ký tự.');
             document.getElementById('newPassword').focus();
             return;
         }
@@ -109,12 +109,12 @@
                 throw new Error(getResponseMessage(result, 'Đổi mật khẩu thất bại.'));
             }
 
-            alert(getResponseMessage(result, 'Đổi mật khẩu thành công!'));
+            await showAlert(getResponseMessage(result, 'Đổi mật khẩu thành công!'));
             closePasswordModal();
             form.reset();
         } catch (error) {
             console.error('Lỗi đổi mật khẩu:', error);
-            alert(error.message || 'Không thể đổi mật khẩu. Vui lòng thử lại.');
+            await showAlert(error.message || 'Không thể đổi mật khẩu. Vui lòng thử lại.');
         }
     }
 

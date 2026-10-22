@@ -1,9 +1,9 @@
 // Tiện ích dùng chung cho cổng giảng viên (nạp sau config.js và auth.js)
 
-(function guard() {
+(async function guard() {
     const token = localStorage.getItem('token');
     if (!token) {
-        alert('Bạn chưa đăng nhập!');
+        await showAlert('Bạn chưa đăng nhập!');
         window.location.href = '../index.html';
         return;
     }
@@ -190,7 +190,7 @@ function openInfoModal(title, html) {
 async function showTopicResult(topicId) {
     const { ok, status, result } = await callAPI('/results/topic/' + topicId, { method: 'GET' });
     if (!ok || !result.data) {
-        alert(status === 404 ? (result.message || 'Chưa có kết quả tổng hợp cho đề tài này.') : (result.message || 'Không thể tải kết quả.'));
+        await showAlert(status === 404 ? (result.message || 'Chưa có kết quả tổng hợp cho đề tài này.') : (result.message || 'Không thể tải kết quả.'));
         return;
     }
     const r = result.data;

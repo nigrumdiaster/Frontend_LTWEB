@@ -2,7 +2,7 @@
 // API: GET /api/users/lecturers/department/{departmentId}
 // Dùng apiFetch (config.js) -> tự gắn Bearer token và tự chuyển về index.html khi 401.
 
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
     document.getElementById('btnResetFilters').addEventListener('click', () => {
         document.getElementById('deptSelect').value = '';
         document.getElementById('searchInput').value = '';
@@ -17,7 +17,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let allLecturers = [];
 
     if (!localStorage.getItem('token')) {
-        alert('Bạn chưa đăng nhập!');
+        await showAlert('Bạn chưa đăng nhập!');
         window.location.href = '../index.html';
         return;
     }

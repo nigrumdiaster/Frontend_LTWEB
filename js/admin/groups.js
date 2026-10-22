@@ -109,7 +109,7 @@ async function loadRegistrationPeriodsDropdown() {
         renderPeriodDropdown();
     } catch (err) {
         console.error('Lỗi load periods dropdown:', err);
-        alert(err.message || 'Không thể tải danh sách đợt đăng ký.');
+        await showAlert(err.message || 'Không thể tải danh sách đợt đăng ký.');
     }
 }
 
@@ -349,7 +349,7 @@ async function viewGroupDetail(groupId) {
 
             document.getElementById('groupDetailModal').style.display = 'flex';
         } else {
-            alert('Không thể lấy chi tiết nhóm!');
+            await showAlert('Không thể lấy chi tiết nhóm!');
         }
     } catch (err) {
         console.error('Lỗi viewGroupDetail:', err);

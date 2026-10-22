@@ -33,12 +33,12 @@ function fmtDateTime(value) {
         : d.toLocaleDateString('vi-VN') + ' ' + d.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
 }
 
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
     const area = document.getElementById('resultArea');
     const errorEl = document.getElementById('resultLoadError');
 
     if (!localStorage.getItem('token')) {
-        alert('Bạn chưa đăng nhập!');
+        await showAlert('Bạn chưa đăng nhập!');
         window.location.href = '../index.html';
         return;
     }

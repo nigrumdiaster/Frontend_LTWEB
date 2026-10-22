@@ -168,12 +168,12 @@ async function handleCreateRegistrationPeriod(e) {
 
         const result = await response.json();
         if (response.ok && result.success) {
-            alert('✅ Tạo đợt đăng ký mới thành công!');
+            await showAlert('✅ Tạo đợt đăng ký mới thành công!');
             closeModal('createPeriodModal');
             document.getElementById('createPeriodForm').reset();
             loadRegistrationPeriods();
         } else {
-            alert(result.message || 'Tạo thất bại!');
+            await showAlert(result.message || 'Tạo thất bại!');
         }
     } catch (error) {
         console.error('Lỗi POST /api/registration-periods:', error);
@@ -247,11 +247,11 @@ async function handleEditRegistrationPeriod(e) {
 
         const result = await response.json();
         if (response.ok && result.success) {
-            alert('✅ Cập nhật đợt đăng ký thành công!');
+            await showAlert('✅ Cập nhật đợt đăng ký thành công!');
             closeModal('editPeriodModal');
             loadRegistrationPeriods();
         } else {
-            alert(result.message || 'Cập nhật thất bại!');
+            await showAlert(result.message || 'Cập nhật thất bại!');
         }
     } catch (error) {
         console.error('Lỗi PUT /api/registration-periods/{id}:', error);
@@ -282,11 +282,11 @@ async function handleUpdateStatus(e) {
 
         const result = await response.json();
         if (response.ok && result.success) {
-            alert('✅ Đổi trạng thái thành công!');
+            await showAlert('✅ Đổi trạng thái thành công!');
             closeModal('statusModal');
             loadRegistrationPeriods();
         } else {
-            alert(result.message || 'Cập nhật trạng thái thất bại!');
+            await showAlert(result.message || 'Cập nhật trạng thái thất bại!');
         }
     } catch (error) {
         console.error('Lỗi PATCH status:', error);
@@ -295,7 +295,7 @@ async function handleUpdateStatus(e) {
 
 // 6. DELETE /api/registration-periods/{id}
 async function deleteRegistrationPeriod(id) {
-    if (!confirm(`Bạn có chắc chắn muốn xóa đợt đăng ký ID = ${id}?`)) return;
+    if (!(await confirmAction(`Bạn có chắc chắn muốn xóa đợt đăng ký ID = ${id}?`))) return;
 
     try {
         const response = await apiFetch(`/registration-periods/${id}`, {
@@ -308,10 +308,10 @@ async function deleteRegistrationPeriod(id) {
 
         const result = await response.json();
         if (response.ok && result.success) {
-            alert('✅ Đã xóa đợt đăng ký!');
+            await showAlert('✅ Đã xóa đợt đăng ký!');
             loadRegistrationPeriods();
         } else {
-            alert(result.message || 'Xóa thất bại!');
+            await showAlert(result.message || 'Xóa thất bại!');
         }
     } catch (error) {
         console.error('Lỗi DELETE /api/registration-periods/{id}:', error);

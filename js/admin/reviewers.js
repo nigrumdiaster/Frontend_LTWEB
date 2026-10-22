@@ -355,7 +355,7 @@ async function openAssignReviewerModal(periodId, topicId) {
         document.getElementById('assignReviewerModal').style.display = 'flex';
     } catch (error) {
         console.error('Lỗi mở form phân công GVPB:', error);
-        alert(error.message || 'Không thể mở form phân công.');
+        await showAlert(error.message || 'Không thể mở form phân công.');
     }
 }
 
@@ -364,7 +364,7 @@ async function assignReviewer(event) {
 
     const reviewerIdVal = document.getElementById('assignReviewerId').value;
     if (!reviewerIdVal) {
-        alert('Vui lòng chọn giảng viên phản biện.');
+        await showAlert('Vui lòng chọn giảng viên phản biện.');
         return;
     }
 
@@ -390,7 +390,7 @@ async function assignReviewer(event) {
         await loadReviewerAssignments();
     } catch (error) {
         console.error('Lỗi POST phân công GVPB:', error);
-        alert(error.message || 'Không thể lưu phân công GVPB.');
+        await showAlert(error.message || 'Không thể lưu phân công GVPB.');
     }
 }
 

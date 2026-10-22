@@ -23,7 +23,7 @@ function topicGroupText(t) {
 
 async function showTopicDetail(id) {
     const { ok, result } = await callAPI('/topics/' + id, { method: 'GET' });
-    if (!ok || !result.data) { alert(result.message || 'Không thể tải chi tiết đề tài.'); return; }
+    if (!ok || !result.data) { await showAlert(result.message || 'Không thể tải chi tiết đề tài.'); return; }
     const t = result.data;
     const field = (label, value) => `
         <div>
@@ -55,13 +55,13 @@ async function showTopicDetail(id) {
 }
 
 async function deleteTopic(id) {
-    if (!confirm('Bạn chắc chắn muốn xóa đề tài này? (Chỉ xóa được khi chưa có nhóm nhận)')) return;
+    if (!(await confirmAction('Bạn chắc chắn muốn xóa đề tài này? (Chỉ xóa được khi chưa có nhóm nhận)'))) return;
     const { ok, result } = await callAPI('/topics/' + id, { method: 'DELETE' });
     if (ok) {
-        alert('Đã xóa đề tài.');
+        await showAlert('Đã xóa đề tài.');
         document.getElementById('btnReloadTopics').click();
     } else {
-        alert(result.message || 'Xóa đề tài thất bại!');
+        await showAlert(result.message || 'Xóa đề tài thất bại!');
     }
 }
 
@@ -173,7 +173,7 @@ async function loadCoAdvisors() {
     const me = getMe();
     const { ok, result } = await callAPI('/users/lecturers/department/' + encodeURIComponent(deptId), { method: 'GET' });
     if (!ok) {
-        alert(result.message || 'Không thể tải danh sách giảng viên.');
+        await showAlert(result.message || 'Không thể tải danh sách giảng viên.');
         return;
     }
     if (!Array.isArray(result.data)) return;
@@ -197,7 +197,7 @@ async function openCreateTopic() {
         callAPI('/departments', { method: 'GET' })
     ]);
     if (!pRes.ok || !dRes.ok) {
-        alert(pRes.result.message || dRes.result.message || 'Không thể tải dữ liệu biểu mẫu.');
+        await showAlert(pRes.result.message || dRes.result.message || 'Không thể tải dữ liệu biểu mẫu.');
         return;
     }
 
@@ -245,7 +245,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const editId = document.getElementById('ctId').value;
         if ((!editId && !payload.periodId) || !payload.departmentId) {
-            alert('Vui lòng chọn đợt đăng ký và bộ môn!');
+            await showAlert('Vui lòng chọn đợt đăng ký và bộ môn!');
             return;
         }
         if (editId) {
@@ -257,11 +257,11 @@ document.addEventListener('DOMContentLoaded', () => {
             ? await callAPI('/topics/' + editId, { method: 'PUT', body: payload })
             : await callAPI('/topics', { method: 'POST', body: payload });
         if (ok) {
-            alert(editId ? 'Đã cập nhật đề tài!' : 'Đề xuất đề tài thành công! Đề tài đang chờ Trưởng bộ môn duyệt.');
+            await showAlert(editId ? 'Đã cập nhật đề tài!' : 'Đề xuất đề tài thành công! Đề tài đang chờ Trưởng bộ môn duyệt.');
             closeCreateTopic();
             document.getElementById('btnReloadTopics').click();
         } else {
-            alert(result.message || 'Đề xuất đề tài thất bại!');
+            await showAlert(result.message || 'Đề xuất đề tài thất bại!');
         }
     });
 });
@@ -272,7 +272,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 async function openEditTopic(id) {
     const { ok, result } = await callAPI('/topics/' + id, { method: 'GET' });
-    if (!ok || !result.data) { alert(result.message || 'Không thể tải đề tài.'); return; }
+    if (!ok || !result.data) { await showAlert(result.message || 'Không thể tải đề tài.'); return; }
     const t = result.data;
 
     await openCreateTopic(); // nạp danh sách bộ môn, GV và mở form
@@ -344,18 +344,18 @@ function openApproval(id) {
         ],
         onSubmit: async (v) => {
             if (v.approvalStatus === 'REJECTED' && !v.rejectionReason) {
-                alert('Vui lòng nhập lý do từ chối!');
+                await showAlert('Vui lòng nhập lý do từ chối!');
                 return false;
             }
             const body = { approvalStatus: v.approvalStatus };
             if (v.rejectionReason) body.rejectionReason = v.rejectionReason;
             const { ok, result } = await callAPI('/topics/' + id + '/approval', { method: 'PATCH', body });
             if (ok) {
-                alert(v.approvalStatus === 'APPROVED' ? 'Đã phê duyệt đề tài.' : 'Đã từ chối đề tài.');
+                await showAlert(v.approvalStatus === 'APPROVED' ? 'Đã phê duyệt đề tài.' : 'Đã từ chối đề tài.');
                 document.getElementById('btnReloadTopics').click();
                 return true;
             }
-            alert(result.message || 'Không thể lưu quyết định!');
+            await showAlert(result.message || 'Không thể lưu quyết định!');
             return false;
         }
     });

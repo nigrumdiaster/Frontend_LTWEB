@@ -164,7 +164,7 @@ function showTableMessage(msg) {
 async function loadLecturersByDept() {
     const departmentId = document.getElementById('filterDepartmentId')?.value;
     if (!departmentId || departmentId < 1) {
-        alert('Vui lòng chọn bộ môn!');
+        await showAlert('Vui lòng chọn bộ môn!');
         return;
     }
 
@@ -178,11 +178,11 @@ async function loadLecturersByDept() {
         if (response.ok && result.success) {
             renderUserTable(result.data);
         } else {
-            alert(result.message || 'Lỗi khi tải danh sách Giảng viên!');
+            await showAlert(result.message || 'Lỗi khi tải danh sách Giảng viên!');
         }
     } catch (error) {
         console.error('Lỗi API GET Lecturers:', error);
-        alert('Không thể tải danh sách Giảng viên.');
+        await showAlert('Không thể tải danh sách Giảng viên.');
     }
 }
 
@@ -211,7 +211,7 @@ async function editUser(id) {
         const result = await response.json();
 
         if (!response.ok || !result.success || !result.data) {
-            alert(result.message || 'Không thể tải thông tin người dùng.');
+            await showAlert(result.message || 'Không thể tải thông tin người dùng.');
             return;
         }
 
@@ -233,7 +233,7 @@ async function editUser(id) {
         document.getElementById('userModal').style.display = 'flex';
     } catch (error) {
         console.error('Lỗi GET user detail:', error);
-        alert('Không thể tải thông tin người dùng.');
+        await showAlert('Không thể tải thông tin người dùng.');
     }
 }
 
@@ -268,20 +268,20 @@ async function handleSaveUser(e) {
         const result = await response.json();
 
         if (response.ok && result.success) {
-            alert(isUpdate ? 'Cập nhật người dùng thành công!' : 'Tạo người dùng thành công!');
+            await showAlert(isUpdate ? 'Cập nhật người dùng thành công!' : 'Tạo người dùng thành công!');
             closeUserModal();
             await loadUsers();
         } else {
-            alert(result.message || (isUpdate ? 'Cập nhật thất bại!' : 'Tạo thất bại!'));
+            await showAlert(result.message || (isUpdate ? 'Cập nhật thất bại!' : 'Tạo thất bại!'));
         }
     } catch (error) {
         console.error(`Lỗi ${isUpdate ? 'PUT' : 'POST'} /api/users:`, error);
-        alert('Không thể lưu thông tin người dùng.');
+        await showAlert('Không thể lưu thông tin người dùng.');
     }
 }
 
 async function deleteUser(id) {
-    if (!confirm(`Bạn có chắc chắn muốn xóa tài khoản ID = ${id}?`)) return;
+    if (!(await confirmAction(`Bạn có chắc chắn muốn xóa tài khoản ID = ${id}?`))) return;
 
     try {
         const response = await apiFetch(`/users/${id}`, {
@@ -291,14 +291,14 @@ async function deleteUser(id) {
         const result = await response.json();
 
         if (response.ok && result.success) {
-            alert('Đã xóa tài khoản thành công!');
+            await showAlert('Đã xóa tài khoản thành công!');
             await loadUsers();
         } else {
-            alert(result.message || 'Thao tác thất bại!');
+            await showAlert(result.message || 'Thao tác thất bại!');
         }
     } catch (error) {
         console.error('Lỗi DELETE /api/users/{id}:', error);
-        alert('Không thể xóa tài khoản.');
+        await showAlert('Không thể xóa tài khoản.');
     }
 }
 

@@ -123,12 +123,12 @@ async function handleCreateDepartment(e) {
 
         const result = await response.json();
         if (response.ok && result.success) {
-            alert('✅ Tạo bộ môn mới thành công!');
+            await showAlert('✅ Tạo bộ môn mới thành công!');
             closeModal('createDeptModal');
             document.getElementById('createDeptForm').reset();
             loadDepartments();
         } else {
-            alert(result.message || 'Tạo thất bại!');
+            await showAlert(result.message || 'Tạo thất bại!');
         }
     } catch (error) {
         console.error('Lỗi POST /api/departments:', error);
@@ -187,11 +187,11 @@ async function handleEditDepartment(e) {
 
         const result = await response.json();
         if (response.ok && result.success) {
-            alert('✅ Cập nhật bộ môn thành công!');
+            await showAlert('✅ Cập nhật bộ môn thành công!');
             closeModal('editDeptModal');
             loadDepartments();
         } else {
-            alert(result.message || 'Cập nhật thất bại!');
+            await showAlert(result.message || 'Cập nhật thất bại!');
         }
     } catch (error) {
         console.error('Lỗi PUT /api/departments:', error);
@@ -200,7 +200,7 @@ async function handleEditDepartment(e) {
 
 // 6. DELETE /api/departments/{id} - Xóa bộ môn
 async function deleteDepartment(id) {
-    if (!confirm(`Bạn có chắc chắn muốn xóa bộ môn ID = ${id}?`)) return;
+    if (!(await confirmAction(`Bạn có chắc chắn muốn xóa bộ môn ID = ${id}?`))) return;
 
     try {
         const response = await apiFetch(`/departments/${id}`, {
@@ -213,10 +213,10 @@ async function deleteDepartment(id) {
 
         const result = await response.json();
         if (response.ok && result.success) {
-            alert('✅ Đã xóa bộ môn!');
+            await showAlert('✅ Đã xóa bộ môn!');
             loadDepartments();
         } else {
-            alert(result.message || 'Xóa thất bại!');
+            await showAlert(result.message || 'Xóa thất bại!');
         }
     } catch (error) {
         console.error('Lỗi DELETE /api/departments:', error);

@@ -223,10 +223,10 @@ function showResultsMessage(message, isError = false) {
 async function publishPeriodResults() {
     const periodId = document.getElementById('filterPeriod').value;
     if (!periodId) {
-        alert('Vui lòng chọn đợt đăng ký cần công bố.');
+        await showAlert('Vui lòng chọn đợt đăng ký cần công bố.');
         return;
     }
-    if (!confirm('Bạn có chắc chắn muốn công bố điểm toàn bộ đợt này cho Sinh viên tra cứu?')) return;
+    if (!(await confirmAction('Bạn có chắc chắn muốn công bố điểm toàn bộ đợt này cho Sinh viên tra cứu?'))) return;
 
     try {
         const response = await apiFetch(`/results/publish`, {
@@ -238,11 +238,11 @@ async function publishPeriodResults() {
         if (!response.ok || !result.success) {
             throw new Error(result.message || 'Không thể công bố kết quả.');
         }
-        alert(result.message || 'Công bố kết quả thành công!');
+        await showAlert(result.message || 'Công bố kết quả thành công!');
         await loadPeriodResults();
     } catch (error) {
         console.error('Lỗi POST công bố kết quả:', error);
-        alert(error.message || 'Không thể công bố kết quả.');
+        await showAlert(error.message || 'Không thể công bố kết quả.');
     }
 }
 
@@ -296,7 +296,7 @@ async function viewResultDetail(topicId) {
         document.getElementById('resultDetailModal').style.display = 'flex';
     } catch (error) {
         console.error('Lỗi tải chi tiết điểm:', error);
-        alert(error.message || 'Không thể tải chi tiết điểm.');
+        await showAlert(error.message || 'Không thể tải chi tiết điểm.');
     }
 }
 

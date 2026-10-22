@@ -110,8 +110,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 const body = { topicId, score: v.score };
                 if (v.feedback) body.feedback = v.feedback;
                 const { ok, result } = await callAPI(`/councils/${councilId}/grade`, { method: 'POST', body });
-                if (ok) { alert('Đã lưu điểm hội đồng.'); return true; }
-                alert(result.message || 'Không thể lưu điểm!');
+                if (ok) { await showAlert('Đã lưu điểm hội đồng.'); return true; }
+                await showAlert(result.message || 'Không thể lưu điểm!');
                 return false;
             }
         });
@@ -126,12 +126,12 @@ document.addEventListener('DOMContentLoaded', () => {
             submitText: 'Chốt kết quả',
             fields: [{ name: 'chairmanSummary', label: 'Nhận xét tổng hợp của Chủ tịch', type: 'textarea' }],
             onSubmit: async (v) => {
-                if (!confirm('Chốt kết quả cho đề tài này?')) return false;
+                if (!(await confirmAction('Chốt kết quả cho đề tài này?'))) return false;
                 const body = { topicId };
                 if (v.chairmanSummary) body.chairmanSummary = v.chairmanSummary;
                 const { ok, result } = await callAPI('/results/finalize', { method: 'POST', body });
-                if (ok) { alert('Đã chốt kết quả đề tài.'); return true; }
-                alert(result.message || 'Không thể chốt kết quả!');
+                if (ok) { await showAlert('Đã chốt kết quả đề tài.'); return true; }
+                await showAlert(result.message || 'Không thể chốt kết quả!');
                 return false;
             }
         });

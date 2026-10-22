@@ -63,8 +63,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 const body = { topicId, score: v.score };
                 if (v.feedback) body.feedback = v.feedback;
                 const { ok, result } = await callAPI('/reviewers/grade', { method: 'POST', body });
-                if (ok) { alert('Đã nộp điểm phản biện.'); load(); return true; }
-                alert(result.message || 'Không thể nộp điểm!');
+                if (ok) { await showAlert('Đã nộp điểm phản biện.'); load(); return true; }
+                await showAlert(result.message || 'Không thể nộp điểm!');
                 return false;
             }
         });

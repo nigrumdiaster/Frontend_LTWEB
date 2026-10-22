@@ -78,7 +78,7 @@ function amILeader(g) {
     return mine ? memberIsLeader(mine) : null;
 }
 
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
     const periodSelect = document.getElementById('periodSelect');
     let defaultPeriodId = '';
     document.getElementById('btnResetFilters').addEventListener('click', () => {
@@ -89,7 +89,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const errorEl = document.getElementById('groupLoadError');
 
     if (!localStorage.getItem('token')) {
-        alert('Bạn chưa đăng nhập!');
+        await showAlert('Bạn chưa đăng nhập!');
         window.location.href = '../index.html';
         return;
     }
@@ -193,8 +193,8 @@ document.addEventListener('DOMContentLoaded', () => {
     function addById(mode) {
         const input = document.getElementById('searchInput_' + mode);
         const id = Number(input.value);
-        if (!Number.isInteger(id) || id <= 0) { alert('Vui lòng nhập ID sinh viên hợp lệ!'); return; }
-        if (me && Number(me.id) === id) { alert('Đó là ID của chính bạn.'); return; }
+        if (!Number.isInteger(id) || id <= 0) { showAlert('Vui lòng nhập ID sinh viên hợp lệ!'); return; }
+        if (me && Number(me.id) === id) { showAlert('Đó là ID của chính bạn.'); return; }
         if (mode === 'create') addSelectedMember({ id, name: 'Sinh viên', code: 'ID ' + id });
         else addMemberToGroup(id);
         input.value = '';
@@ -204,7 +204,7 @@ document.addEventListener('DOMContentLoaded', () => {
     function addSelectedMember(m) {
         if (selectedMembers.some(x => x.id === m.id)) return;
         if (selectedMembers.length >= MAX_GROUP_MEMBERS - 1) {
-            alert(`Nhóm tối đa ${MAX_GROUP_MEMBERS} thành viên (gồm cả bạn).`);
+            showAlert(`Nhóm tối đa ${MAX_GROUP_MEMBERS} thành viên (gồm cả bạn).`);
             return;
         }
         selectedMembers.push(m);
@@ -230,13 +230,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
     async function createGroup() {
         const name = document.getElementById('newGroupName').value.trim();
-        if (!name) { alert('Vui lòng nhập tên nhóm!'); return; }
+        if (!name) { await showAlert('Vui lòng nhập tên nhóm!'); return; }
         const { ok, result } = await callAPI('/groups', {
             method: 'POST',
             body: { name, periodId: Number(periodSelect.value), memberStudentIds: selectedMembers.map(m => m.id) }
         });
-        if (ok) { alert('Tạo nhóm thành công!'); loadGroup(); }
-        else alert(result.message || 'Tạo nhóm thất bại!');
+        if (ok) { await showAlert('Tạo nhóm thành công!'); loadGroup(); }
+        else await showAlert(result.message || 'Tạo nhóm thất bại!');
     }
 
     // ---------- Đã có nhóm ----------
@@ -367,41 +367,41 @@ document.addEventListener('DOMContentLoaded', () => {
 
     async function registerTopic() {
         const topicId = Number(document.getElementById('topicPick').value);
-        if (!confirm('Xác nhận đăng ký đề tài này cho nhóm?')) return;
+        if (!(await confirmAction('Xác nhận đăng ký đề tài này cho nhóm?'))) return;
         const { ok, result } = await callAPI(`/groups/${currentGroup.id}/register-topic`, { method: 'POST', body: { topicId } });
-        if (ok) { alert('Đăng ký đề tài thành công!'); loadGroup(); }
-        else alert(result.message || 'Đăng ký đề tài thất bại!');
+        if (ok) { await showAlert('Đăng ký đề tài thành công!'); loadGroup(); }
+        else await showAlert(result.message || 'Đăng ký đề tài thất bại!');
     }
 
     async function cancelTopic() {
-        if (!confirm('Bạn chắc chắn muốn hủy đăng ký đề tài?')) return;
+        if (!(await confirmAction('Bạn chắc chắn muốn hủy đăng ký đề tài?'))) return;
         const { ok, result } = await callAPI(`/groups/${currentGroup.id}/cancel-topic`, { method: 'DELETE' });
-        if (ok) { alert('Đã hủy đăng ký đề tài.'); loadGroup(); }
-        else alert(result.message || 'Hủy đăng ký thất bại!');
+        if (ok) { await showAlert('Đã hủy đăng ký đề tài.'); loadGroup(); }
+        else await showAlert(result.message || 'Hủy đăng ký thất bại!');
     }
 
     // ---------- Thành viên ----------
     async function addMemberToGroup(studentId) {
         const { ok, result } = await callAPI(`/groups/${currentGroup.id}/members`, { method: 'POST', body: { studentId } });
-        if (ok) { alert('Đã thêm thành viên!'); loadGroup(); }
-        else alert(result.message || 'Thêm thành viên thất bại!');
+        if (ok) { await showAlert('Đã thêm thành viên!'); loadGroup(); }
+        else await showAlert(result.message || 'Thêm thành viên thất bại!');
     }
 
     async function removeMember(studentId) {
-        if (!confirm('Xóa thành viên này khỏi nhóm?')) return;
+        if (!(await confirmAction('Xóa thành viên này khỏi nhóm?'))) return;
         const { ok, result } = await callAPI(`/groups/${currentGroup.id}/members/${studentId}`, { method: 'DELETE' });
-        if (ok) { alert('Đã xóa thành viên.'); loadGroup(); }
-        else alert(result.message || 'Xóa thành viên thất bại!');
+        if (ok) { await showAlert('Đã xóa thành viên.'); loadGroup(); }
+        else await showAlert(result.message || 'Xóa thành viên thất bại!');
     }
 
     // ---------- Nộp báo cáo ----------
     async function submitReport() {
         const reportUrl = document.getElementById('reportUrl').value.trim();
         const reportNote = document.getElementById('reportNote').value.trim();
-        if (!reportUrl) { alert('Vui lòng nhập link báo cáo!'); return; }
+        if (!reportUrl) { await showAlert('Vui lòng nhập link báo cáo!'); return; }
         const { ok, result } = await callAPI(`/groups/${currentGroup.id}/reports`, { method: 'POST', body: { reportUrl, reportNote } });
-        if (ok) { alert('Nộp báo cáo thành công!'); loadGroup(); }
-        else alert(result.message || 'Nộp báo cáo thất bại!');
+        if (ok) { await showAlert('Nộp báo cáo thành công!'); loadGroup(); }
+        else await showAlert(result.message || 'Nộp báo cáo thất bại!');
     }
 
     document.getElementById('btnReloadGroup').addEventListener('click', loadGroup);

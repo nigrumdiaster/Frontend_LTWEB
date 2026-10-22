@@ -68,8 +68,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 const body = { topicId, score: v.score };
                 if (v.feedback) body.feedback = v.feedback;
                 const { ok, result } = await callAPI('/grades/advisor', { method: 'POST', body });
-                if (ok) { alert('Đã lưu điểm hướng dẫn.'); load(); return true; }
-                alert(result.message || 'Không thể lưu điểm!');
+                if (ok) { await showAlert('Đã lưu điểm hướng dẫn.'); load(); return true; }
+                await showAlert(result.message || 'Không thể lưu điểm!');
                 return false;
             }
         });
