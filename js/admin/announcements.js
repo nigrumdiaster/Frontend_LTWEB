@@ -41,14 +41,6 @@ async function loadAnnouncements() {
         const query = params.toString();
         const result = await requestAnnouncementApi(`/api/announcements${query ? `?${query}` : ''}`);
         const announcements = Array.isArray(result.data) ? result.data : [];
-        const roleLabels = { ROLE_STUDENT: 'Sinh viên', ROLE_LECTURER: 'Giảng viên', ROLE_ADMIN: 'Admin' };
-        populateFilterOptions(
-            document.getElementById('filterTargetRole'),
-            announcements.map(announcement => announcement.targetRole),
-            'Tất cả',
-            role => roleLabels[role] || role,
-            'ALL'
-        );
         const queryText = removeVietnameseTones(title);
         renderAnnouncements(announcements.filter(announcement => !queryText ||
             removeVietnameseTones(announcement.title).includes(queryText)));
@@ -261,7 +253,7 @@ function escapeHtml(value) {
 }
 
 function resetFilters() {
-    document.getElementById('filterTargetRole').value = '';
+    document.getElementById('filterTargetRole').value = 'ALL';
     document.getElementById('searchTitle').value = '';
     document.querySelectorAll('.filter-card .custom-multiselect-dropdown.open').forEach(dropdown => dropdown.classList.remove('open'));
     loadAnnouncements();
