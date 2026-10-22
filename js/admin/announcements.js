@@ -81,6 +81,7 @@ function renderAnnouncements(announcements) {
 }
 
 function targetRoleBadge(role) {
+    role = role || 'ALL';
     const badges = {
         ALL: ['Tất cả', '#e0f2fe', '#075985'],
         ROLE_STUDENT: ['Sinh viên', '#dcfce7', '#166534'],
@@ -218,6 +219,7 @@ function getSafeFileUrl(value) {
 }
 
 function roleLabel(role) {
+    role = role || 'ALL';
     return {
         ALL: 'Tất cả',
         ROLE_STUDENT: 'Sinh viên',
