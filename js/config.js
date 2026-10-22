@@ -1,10 +1,23 @@
 const API_BASE_URL = 'http://localhost:8080/api';
 
+function escapeText(value) {
+    return String(value ?? '').replace(/[&<>"']/g, character => ({
+        '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+    })[character]);
+}
+
 // Các thư mục con của từng cổng (cần '../' để quay về index.html)
 const PORTAL_FOLDERS = ['/admin/', '/student/', '/lecturer/'];
 
 function isInPortalFolder() {
     return PORTAL_FOLDERS.some(folder => window.location.pathname.includes(folder));
+}
+
+function logout() {
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    sessionStorage.removeItem('portal-toast');
+    window.location.href = isInPortalFolder() ? '../index.html' : 'index.html';
 }
 
 async function apiFetch(endpoint, options = {}) {
@@ -26,6 +39,8 @@ async function apiFetch(endpoint, options = {}) {
     });
 
     if (response.status === 401) {
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
         if (isInPortalFolder()) {
             window.location.href = '../index.html';
         } else if (window.location.pathname !== '/' && !window.location.pathname.endsWith('/index.html')) {

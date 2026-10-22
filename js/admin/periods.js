@@ -109,10 +109,10 @@ function renderRegistrationPeriodsTable(periods) {
         <tr>
             <td>${p.id}</td>
             <td>
-                <strong>${p.name}</strong><br>
+                <strong>${escapeText(p.name)}</strong><br>
                 <small style="color: var(--primary); font-weight: 600;">${formatType(p.type)}</small>
             </td>
-            <td>${p.semester} - ${p.academicYear}</td>
+            <td>${escapeText(p.semester)} - ${escapeText(p.academicYear)}</td>
             <td>
                 <small>Từ: ${formatDateDisplay(p.lecturerRegStart)}</small><br>
                 <small>Đến: ${formatDateDisplay(p.lecturerRegEnd)}</small>
@@ -122,8 +122,8 @@ function renderRegistrationPeriodsTable(periods) {
                 <small>Đến: ${formatDateDisplay(p.studentRegEnd)}</small>
             </td>
             <td>
-                <small>PB: ${p.reviewerDeadline || '-'}</small><br>
-                <small>BV: ${p.defenseDate || '-'}</small>
+                <small>PB: ${escapeText(p.reviewerDeadline || '-')}</small><br>
+                <small>BV: ${escapeText(p.defenseDate || '-')}</small>
             </td>
             <td>${formatStatusBadge(p.status)}</td>
             <td style="text-align: right;">

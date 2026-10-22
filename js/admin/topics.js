@@ -500,20 +500,20 @@ function renderTopicsTable(topics) {
     tbody.innerHTML = topics.map(t => `
         <tr>
             <td>${t.id}</td>
-            <td><strong>${t.code || '-'}</strong></td>
+            <td><strong>${escapeText(t.code || '-')}</strong></td>
             <td>
-                <strong style="color: #0f172a;">${t.titleVi}</strong><br>
-                <small style="color: #64748b; font-style: italic;">${t.titleEn || '-'}</small>
+                <strong style="color: #0f172a;">${escapeText(t.titleVi)}</strong><br>
+                <small style="color: #64748b; font-style: italic;">${escapeText(t.titleEn || '-')}</small>
             </td>
             <td>
-                <small><strong>BM:</strong> ${t.departmentName || '-'}</small><br>
-                <small style="color: #4f46e5;">${t.periodName || '-'}</small>
+                <small><strong>BM:</strong> ${escapeText(t.departmentName || '-')}</small><br>
+                <small style="color: #4f46e5;">${escapeText(t.periodName || '-')}</small>
             </td>
             <td>
-                <small><strong>Chính:</strong> ${t.primaryAdvisorName || '-'}</small><br>
-                <small style="color: #64748b;"><strong>Đồng:</strong> ${t.coAdvisorName || 'Không có'}</small>
+                <small><strong>Chính:</strong> ${escapeText(t.primaryAdvisorName || '-')}</small><br>
+                <small style="color: #64748b;"><strong>Đồng:</strong> ${escapeText(t.coAdvisorName || 'Không có')}</small>
             </td>
-            <td><span class="badge badge-secondary">${t.maxStudents ?? '-'} SV</span></td>
+            <td><span class="badge badge-secondary">${escapeText(t.maxStudents ?? '-')} SV</span></td>
             <td>${formatStatusBadge(t.approvalStatus)}</td>
             <td style="text-align: right; white-space: nowrap;">
                 <button onclick="openDetailTopicModal(${t.id})" class="btn btn-sm btn-action-view" title="Xem chi tiết">👁️ Chi tiết</button>
@@ -737,14 +737,14 @@ async function openDetailTopicModal(id) {
             const t = result.data;
             const container = document.getElementById('detailTopicContent');
             container.innerHTML = `
-                <div><strong>Mã đề tài:</strong> ${t.code || '-'}</div>
-                <div><strong>Tên Tiếng Việt:</strong> ${t.titleVi}</div>
-                <div><strong>Tên Tiếng Anh:</strong> ${t.titleEn || '-'}</div>
-                <div><strong>Đợt đăng ký:</strong> ${t.periodName || '-'}</div>
-                <div><strong>Bộ môn:</strong> ${t.departmentName || '-'}</div>
-                <div><strong>GVHD Chính:</strong> ${t.primaryAdvisorName || '-'} (${t.primaryAdvisorEmail || '-'})</div>
-                <div><strong>GV Đồng HD:</strong> ${t.coAdvisorName || 'Không có'}</div>
-                <div><strong>Số SV tối đa:</strong> ${t.maxStudents ?? '-'} Sinh viên</div>
+                <div><strong>Mã đề tài:</strong> ${escapeText(t.code || '-')}</div>
+                <div><strong>Tên Tiếng Việt:</strong> ${escapeText(t.titleVi)}</div>
+                <div><strong>Tên Tiếng Anh:</strong> ${escapeText(t.titleEn || '-')}</div>
+                <div><strong>Đợt đăng ký:</strong> ${escapeText(t.periodName || '-')}</div>
+                <div><strong>Bộ môn:</strong> ${escapeText(t.departmentName || '-')}</div>
+                <div><strong>GVHD Chính:</strong> ${escapeText(t.primaryAdvisorName || '-')} (${t.primaryAdvisorEmail || '-'})</div>
+                <div><strong>GV Đồng HD:</strong> ${escapeText(t.coAdvisorName || 'Không có')}</div>
+                <div><strong>Số SV tối đa:</strong> ${escapeText(t.maxStudents ?? '-')} Sinh viên</div>
                 <div><strong>Trạng thái duyệt:</strong> ${formatStatusBadge(t.approvalStatus)}</div>
                 ${t.rejectionReason ? `<div style="color: #ef4444;"><strong>Lý do từ chối:</strong> ${t.rejectionReason}</div>` : ''}
                 <div><strong>Mô tả:</strong> ${t.description || 'Chưa có mô tả'}</div>

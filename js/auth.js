@@ -265,8 +265,3 @@ function closePasswordModal() {
 }
 
 // Hàm Đăng xuất
-function logout() {
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
-    window.location.href = isInPortalFolder() ? '../index.html' : 'index.html';
-}

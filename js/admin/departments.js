@@ -83,11 +83,11 @@ function renderDepartmentsTable(departments) {
     tbody.innerHTML = departments.map(d => `
         <tr>
             <td>${d.id}</td>
-            <td><strong>${d.code || '-'}</strong></td>
-            <td><strong>${d.name || '-'}</strong></td>
-            <td>${d.description || '-'}</td>
-            <td>${d.headLecturerName ? `${d.headLecturerName} <small style="color: #64748b;">(ID: ${d.headLecturerId})</small>` : '<em style="color:#94a3b8;">Chưa gán</em>'}</td>
-            <td>${d.createdAt || '-'}</td>
+            <td><strong>${escapeText(d.code || '-')}</strong></td>
+            <td><strong>${escapeText(d.name || '-')}</strong></td>
+            <td>${escapeText(d.description || '-')}</td>
+            <td>${d.headLecturerName ? `${escapeText(d.headLecturerName)} <small style="color: #64748b;">(ID: ${d.headLecturerId})</small>` : '<em style="color:#94a3b8;">Chưa gán</em>'}</td>
+            <td>${escapeText(d.createdAt || '-')}</td>
             <td style="text-align: right;">
                 <button onclick="openEditDeptModal(${d.id})" class="btn btn-sm btn-action-edit">Sửa</button>
                 <button onclick="deleteDepartment(${d.id})" class="btn btn-sm btn-action-delete">Xóa</button>
@@ -136,6 +136,7 @@ async function handleCreateDepartment(e) {
         }
     } catch (error) {
         console.error('Lỗi POST /api/departments:', error);
+        await showAlert('Không thể tạo bộ môn. Vui lòng thử lại.', 'error');
     }
 }
 
@@ -163,6 +164,7 @@ async function openEditDeptModal(id) {
         }
     } catch (error) {
         console.error('Lỗi GET detail dept:', error);
+        await showAlert('Không thể tải thông tin bộ môn. Vui lòng thử lại.', 'error');
     }
 }
 
@@ -199,6 +201,7 @@ async function handleEditDepartment(e) {
         }
     } catch (error) {
         console.error('Lỗi PUT /api/departments:', error);
+        await showAlert('Không thể cập nhật bộ môn. Vui lòng thử lại.', 'error');
     }
 }
 
@@ -225,6 +228,7 @@ async function deleteDepartment(id) {
         }
     } catch (error) {
         console.error('Lỗi DELETE /api/departments:', error);
+        await showAlert('Không thể xóa bộ môn. Vui lòng thử lại.', 'error');
     }
 }
 

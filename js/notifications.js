@@ -20,7 +20,7 @@
             : /thành công|^✅|^Đã /i.test(text) ? 'success'
             : /vui lòng|chưa đăng nhập|hết hạn|tối đa|ít nhất|hợp lệ/i.test(text) ? 'warning' : 'info';
         if (icon === 'success' || icon === 'info') {
-            return enqueue({
+            enqueue({
                 toast: true,
                 position: 'top-end',
                 titleText: text,
@@ -31,6 +31,7 @@
                 timer: 3000,
                 timerProgressBar: true
             });
+            return Promise.resolve();
         }
         return enqueue({titleText: titles[icon] || titles.info, text, icon});
     };

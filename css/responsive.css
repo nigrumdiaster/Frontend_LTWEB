@@ -1,4 +1,5 @@
 /* Shared portal layout: contain wide data without stretching the page. */
+[hidden] { display: none !important; }
 .swal2-container { z-index: 2000; }
 .swal2-popup { max-width: calc(100vw - 24px); }
 .swal2-html-container { overflow-wrap: anywhere; white-space: pre-line; }

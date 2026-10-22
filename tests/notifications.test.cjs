@@ -61,3 +61,11 @@ test('success notifications are timed corner toasts with no confirm button', asy
     });
     await app.showAlert('Đăng nhập thành công!');
 });
+
+test('success toast does not block subsequent UI updates', async () => {
+    let closeToast;
+    const app = setup(() => new Promise(resolve => {closeToast = resolve;}));
+    await app.showAlert('Lưu thành công!');
+    assert.equal(typeof closeToast, 'function');
+    closeToast({isDismissed: true});
+});

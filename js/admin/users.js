@@ -20,13 +20,17 @@ function formatRoleName(role) {
     return roleMap[role] || role;
 }
 
+let canManageUsers = false;
+let savingUser = false;
+
 document.addEventListener('DOMContentLoaded', async () => {
+    document.getElementById('btnOpenCreateUser').hidden = true;
     if (!getToken()) {
         showTableMessage('⚠️ Bạn chưa đăng nhập hoặc phiên làm việc đã hết hạn. Vui lòng <a href="../index.html" style="color: var(--primary); font-weight: 600;">Đăng nhập lại</a>.');
         return;
     }
 
-    checkUserPermission();
+    await checkUserPermission();
     await loadDepartmentOptions();
     loadUsers();
 
@@ -70,10 +74,9 @@ async function checkUserPermission() {
         const result = await response.json();
 
         if (response.ok && result.success) {
+            canManageUsers = ['ROLE_ADMIN', 'ROLE_DEAN'].includes(result.data.role);
             const btnCreate = document.getElementById('btnOpenCreateUser');
-            if (btnCreate && result.data.role !== 'ROLE_ADMIN' && result.data.role !== 'ROLE_DEAN') {
-                btnCreate.style.display = 'none';
-            }
+            if (btnCreate) btnCreate.hidden = !canManageUsers;
         }
     } catch (error) {
         console.error('Lỗi khi kiểm tra phân quyền:', error);
@@ -115,7 +118,7 @@ async function loadUsers() {
                 [user.fullName, user.username, user.email, user.code]
                     .some(value => removeVietnameseTones(value).includes(query))));
         } else {
-            showTableMessage(`❌ Lỗi: ${result.message || 'Không thể tải danh sách người dùng'}`);
+            showTableMessage(`❌ Lỗi: ${escapeText(result.message || 'Không thể tải danh sách người dùng')}`);
         }
     } catch (error) {
         console.error('Lỗi kết nối API:', error);
@@ -128,7 +131,7 @@ const userDeleteLabels = new Map();
 function renderUserTable(users) {
     userDeleteLabels.clear();
     (users || []).forEach(user => userDeleteLabels.set(String(user.id),
-        user.fullName && user.username ? `${user.fullName} (${user.username})` : user.fullName || user.username || user.code));
+        user.fullName && user.username ? `${escapeText(user.fullName)} (${escapeText(user.username)})` : user.fullName || user.username || user.code));
     const tbody = document.getElementById('userTableBody');
     if (!tbody) return;
 
@@ -140,20 +143,20 @@ function renderUserTable(users) {
     tbody.innerHTML = users.map(user => `
         <tr>
             <td>${user.id}</td>
-            <td><strong>${user.code || '-'}</strong></td>
-            <td>${user.fullName || ''}</td>
-            <td>${user.username || ''}</td>
-            <td>${user.email || ''}<br><small style="color: var(--text-muted);">${user.phone || ''}</small></td>
-            <td><span class="badge badge-role">${formatRoleName(user.role)}</span></td>
-            <td>${user.departmentName || '-'}<br><small style="color: var(--text-muted);">${user.studentClass || ''}</small></td>
+            <td><strong>${escapeText(user.code || '-')}</strong></td>
+            <td>${escapeText(user.fullName || '')}</td>
+            <td>${escapeText(user.username || '')}</td>
+            <td>${escapeText(user.email || '')}<br><small style="color: var(--text-muted);">${escapeText(user.phone || '')}</small></td>
+            <td><span class="badge badge-role">${escapeText(formatRoleName(user.role))}</span></td>
+            <td>${escapeText(user.departmentName || '-')}<br><small style="color: var(--text-muted);">${escapeText(user.studentClass || '')}</small></td>
             <td>
                 <span class="badge ${user.active ? 'badge-success' : 'badge-danger'}">
                     ${user.active ? 'Hoạt động' : 'Đã khóa'}
                 </span>
             </td>
             <td style="text-align: right;">
-                <button onclick="editUser(${user.id})" class="btn btn-sm btn-action-edit">Sửa</button>
-                <button onclick="deleteUser(${user.id})" class="btn btn-sm btn-action-delete">Xóa</button>
+                <button ${canManageUsers ? '' : 'hidden'} onclick="editUser(${Number(user.id)})" class="btn btn-sm btn-action-edit">Sửa</button>
+                <button ${canManageUsers ? '' : 'hidden'} onclick="deleteUser(${Number(user.id)})" class="btn btn-sm btn-action-delete">Xóa</button>
             </td>
         </tr>
     `).join('');
@@ -192,6 +195,7 @@ async function loadLecturersByDept() {
 }
 
 function openCreateModal() {
+    if (!canManageUsers) return;
     const form = document.getElementById('userForm');
     const modal = document.getElementById('userModal');
     if (!form || !modal) return;
@@ -208,6 +212,7 @@ function openCreateModal() {
 }
 
 async function editUser(id) {
+    if (!canManageUsers) return;
     try {
         const response = await apiFetch(`/users/${id}`, {
             method: 'GET',
@@ -244,6 +249,7 @@ async function editUser(id) {
 
 async function handleSaveUser(e) {
     e.preventDefault();
+    if (!canManageUsers || savingUser) return;
 
     const id = document.getElementById('userId').value;
     const departmentValue = document.getElementById('userDeptId').value;
@@ -264,6 +270,9 @@ async function handleSaveUser(e) {
     }
 
     const isUpdate = Boolean(id);
+    savingUser = true;
+    const saveButton = document.getElementById('userSaveButton');
+    saveButton.disabled = true;
     try {
         const response = await apiFetch(isUpdate ? `/users/${id}` : `/users`, {
             method: isUpdate ? 'PUT' : 'POST',
@@ -282,10 +291,14 @@ async function handleSaveUser(e) {
     } catch (error) {
         console.error(`Lỗi ${isUpdate ? 'PUT' : 'POST'} /api/users:`, error);
         await showAlert('Không thể lưu thông tin người dùng.');
+    } finally {
+        savingUser = false;
+        saveButton.disabled = false;
     }
 }
 
 async function deleteUser(id) {
+    if (!canManageUsers) return;
     const name = userDeleteLabels.get(String(id));
     if (!(await confirmAction(`Bạn có chắc chắn muốn xóa tài khoản ${name ? `“${name}”` : 'này'}?`))) return;
 
