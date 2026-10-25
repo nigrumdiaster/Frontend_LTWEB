@@ -12,6 +12,7 @@ let selectedCouncilPeriodId = '';
 let selectedChairmanId = null;
 let selectedSecretaryId = null;
 let selectedMemberIds = [];
+let editingCouncilId = null;
 
 let filterPeriodSearchQuery = '';
 let councilPeriodSearchQuery = '';
@@ -119,6 +120,7 @@ function setupSingleSearchableSelect({ triggerId, dropdownId, searchInputId, ign
 
     if (trigger && dropdown) {
         trigger.addEventListener('click', (e) => {
+            if (trigger.getAttribute('aria-disabled') === 'true') return;
             if (ignoreClickSelector && e.target.closest(ignoreClickSelector)) {
                 return;
             }
@@ -224,7 +226,7 @@ function renderFilterPeriodSelect() {
         const name = p.name || p.title || `Đợt ${p.id}`;
         return `
             <div class="select-option-item ${isSelected ? 'selected' : ''}" onclick="selectFilterPeriod('${p.id}')">
-                <span>${isSelected ? '✓ ' : ''}${name}</span>
+                <span>${isSelected ? '✓ ' : ''}${escapeText(name)}</span>
             </div>
         `;
     }).join('');
@@ -269,13 +271,14 @@ function renderCouncilPeriodSelect() {
         const name = p.name || p.title || `Đợt ${p.id}`;
         return `
             <div class="select-option-item ${isSelected ? 'selected' : ''}" onclick="selectCouncilPeriod('${p.id}')">
-                <span>${isSelected ? '✓ ' : ''}${name}</span>
+                <span>${isSelected ? '✓ ' : ''}${escapeText(name)}</span>
             </div>
         `;
     }).join('');
 }
 
 function selectCouncilPeriod(id) {
+    if (editingCouncilId !== null) return;
     selectedCouncilPeriodId = String(id);
     const hidden = document.getElementById('councilPeriodId');
     if (hidden) hidden.value = selectedCouncilPeriodId;
@@ -333,7 +336,7 @@ function renderChairmanSelect() {
 
         return `
             <div class="${classes}" onclick="selectChairman(${l.id})">
-                <span style="flex: 1; min-width: 0;">${isSelected ? '✓ ' : ''}${l.fullName} (${l.code || l.username || l.id})</span>
+                <span style="flex: 1; min-width: 0;">${isSelected ? '✓ ' : ''}${escapeText(l.fullName)} (${escapeText(l.code || l.username || l.id)})</span>
                 ${badge}
             </div>
         `;
@@ -401,7 +404,7 @@ function renderSecretarySelect() {
 
         return `
             <div class="${classes}" onclick="selectSecretary(${l.id})">
-                <span style="flex: 1; min-width: 0;">${isSelected ? '✓ ' : ''}${l.fullName} (${l.code || l.username || l.id})</span>
+                <span style="flex: 1; min-width: 0;">${isSelected ? '✓ ' : ''}${escapeText(l.fullName)} (${escapeText(l.code || l.username || l.id)})</span>
                 ${badge}
             </div>
         `;
@@ -438,10 +441,10 @@ function renderMemberTags() {
     const lecturerMap = new Map(councilLecturers.map(l => [l.id, l]));
     tagsContainer.innerHTML = selectedMemberIds.map(id => {
         const lecturer = lecturerMap.get(id);
-        const name = lecturer ? `${lecturer.fullName} (${lecturer.code || lecturer.username || lecturer.id})` : `GV #${id}`;
+        const name = lecturer ? `${escapeText(lecturer.fullName)} (${escapeText(lecturer.code || lecturer.username || lecturer.id)})` : `GV #${id}`;
         return `
             <span class="multiselect-tag">
-                <span>${name}</span>
+                <span>${escapeText(name)}</span>
                 <span class="multiselect-tag-remove" onclick="removeMemberSelection(${id}, event)" title="Bỏ chọn">&times;</span>
             </span>
         `;
@@ -493,7 +496,7 @@ function renderMemberOptionsList() {
         return `
             <div class="${classes}" onclick="toggleMemberSelection(${lecturer.id}, event)">
                 <input type="checkbox" ${isSelected ? 'checked' : ''} ${isDisabled ? 'disabled' : ''} tabindex="-1">
-                <span style="flex: 1; min-width: 0;">${lecturer.fullName} (${lecturer.code || lecturer.username || lecturer.id})</span>
+                <span style="flex: 1; min-width: 0;">${escapeText(lecturer.fullName)} (${escapeText(lecturer.code || lecturer.username || lecturer.id)})</span>
                 ${roleBadge}
             </div>
         `;
@@ -570,17 +573,33 @@ function renderCouncils(councils) {
     tbody.innerHTML = councils.map(council => `
         <tr>
             <td><strong>HD${String(council.id).padStart(3, '0')}</strong></td>
-            <td>${council.name}</td>
-            <td>${council.defenseDate || '-'}</td>
-            <td>${council.location || '-'}</td>
-            <td>${council.chairmanName || '-'}</td>
+            <td>${escapeText(council.name)}</td>
+            <td>${escapeText(council.defenseDate || '-')}</td>
+            <td>${escapeText(council.location || '-')}</td>
+            <td>${escapeText(council.chairmanName || '-')}</td>
             <td>${(council.topicIds || []).length}</td>
             <td style="text-align: right; white-space: nowrap;">
                 <button type="button" onclick="viewCouncilDetail(${council.id})" class="btn btn-sm btn-action-view">👁️ Chi tiết</button>
+                <button type="button" onclick="openEditCouncilModal(${council.id})" class="btn btn-sm btn-action-edit">Chỉnh sửa</button>
                 <button type="button" onclick="openAssignTopicsModal(${council.id})" class="btn btn-sm btn-primary">📌 Gán đề tài</button>
+                <button type="button" onclick="deleteCouncil(${council.id})" class="btn btn-sm btn-action-delete">Xóa</button>
             </td>
         </tr>
     `).join('');
+}
+
+async function deleteCouncil(councilId) {
+    if (!(await confirmAction('Xóa hội đồng này và các phân công đề tài? Hội đồng đã có điểm không thể xóa.'))) return;
+    try {
+        const response = await apiFetch(`/councils/${encodeURIComponent(councilId)}`, {
+            method: 'DELETE', headers: getAuthHeaders()
+        });
+        const result = await response.json();
+        if (!response.ok || !result.success) throw new Error(result.message || 'Không thể xóa hội đồng.');
+        await loadCouncils();
+    } catch (error) {
+        await showAlert(error.message || 'Không thể xóa hội đồng.');
+    }
 }
 
 function showCouncilMessage(message, isError = false) {
@@ -591,6 +610,10 @@ function showCouncilMessage(message, isError = false) {
 }
 
 function openCreateCouncilModal() {
+    editingCouncilId = null;
+    document.getElementById('councilFormTitle').textContent = 'Thành lập Hội đồng mới';
+    document.getElementById('councilSaveButton').textContent = 'Thành lập';
+    setCouncilPeriodLocked(false);
     const form = document.getElementById('createCouncilForm');
     form.reset();
 
@@ -624,8 +647,59 @@ function openCreateCouncilModal() {
     document.getElementById('createCouncilModal').style.display = 'flex';
 }
 
+function setCouncilPeriodLocked(locked) {
+    const trigger = document.getElementById('councilPeriodTrigger');
+    trigger.setAttribute('aria-disabled', String(locked));
+    trigger.tabIndex = locked ? -1 : 0;
+    trigger.style.opacity = locked ? '0.65' : '';
+    trigger.title = locked ? 'Đợt đăng ký được giữ nguyên khi chỉnh sửa hội đồng.' : '';
+}
+
+async function openEditCouncilModal(councilId) {
+    try {
+        const response = await apiFetch(`/councils/${encodeURIComponent(councilId)}`, {
+            method: 'GET', headers: getAuthHeaders()
+        });
+        const result = await response.json();
+        if (!response.ok || !result.success || !result.data) {
+            throw new Error(result.message || 'Không thể tải thông tin hội đồng.');
+        }
+        const council = result.data;
+        openCreateCouncilModal();
+        editingCouncilId = council.id;
+        document.getElementById('councilFormTitle').textContent = 'Chỉnh sửa hội đồng';
+        document.getElementById('councilSaveButton').textContent = 'Lưu thay đổi';
+        selectedCouncilPeriodId = String(council.periodId);
+        document.getElementById('councilPeriodId').value = selectedCouncilPeriodId;
+        if (!registrationPeriods.some(p => String(p.id) === selectedCouncilPeriodId)) {
+            registrationPeriods.push({ id: council.periodId, name: council.periodName });
+        }
+        const members = council.members || [];
+        for (const member of members) {
+            if (!councilLecturers.some(l => l.id === member.lecturerId)) {
+                councilLecturers.push({ id: member.lecturerId, fullName: member.lecturerName, code: member.lecturerCode });
+            }
+        }
+        selectedChairmanId = members.find(m => m.councilRole === 'CHAIRMAN')?.lecturerId || null;
+        selectedSecretaryId = members.find(m => m.councilRole === 'SECRETARY')?.lecturerId || null;
+        selectedMemberIds = members.filter(m => m.councilRole === 'MEMBER').map(m => m.lecturerId);
+        document.getElementById('councilChairmanId').value = selectedChairmanId || '';
+        document.getElementById('councilSecretaryId').value = selectedSecretaryId || '';
+        document.getElementById('councilName').value = council.name || '';
+        document.getElementById('councilDefenseDate').value = council.defenseDate?.slice(0, 10) || '';
+        document.getElementById('councilLocation').value = council.location || '';
+        document.getElementById('councilNotes').value = council.notes || '';
+        setCouncilPeriodLocked(true);
+        renderAllSelects();
+    } catch (error) {
+        await showAlert(error.message || 'Không thể mở form chỉnh sửa hội đồng.');
+    }
+}
+
 async function createCouncil(event) {
     event.preventDefault();
+    const saveButton = document.getElementById('councilSaveButton');
+    if (saveButton.disabled) return;
     const periodId = Number.parseInt(document.getElementById('councilPeriodId')?.value || selectedCouncilPeriodId, 10);
     const chairmanId = Number.parseInt(document.getElementById('councilChairmanId')?.value || selectedChairmanId, 10);
     const secretaryId = Number.parseInt(document.getElementById('councilSecretaryId')?.value || selectedSecretaryId, 10);
@@ -674,15 +748,16 @@ async function createCouncil(event) {
         ]
     };
 
+    saveButton.disabled = true;
     try {
-        const response = await apiFetch(`/councils`, {
-            method: 'POST',
+        const response = await apiFetch(editingCouncilId !== null ? `/councils/${encodeURIComponent(editingCouncilId)}` : '/councils', {
+            method: editingCouncilId !== null ? 'PUT' : 'POST',
             headers: getAuthHeaders(),
             body: JSON.stringify(payload)
         });
         const result = await response.json();
         if (!response.ok || !result.success) {
-            throw new Error(result.message || 'Không thể thành lập hội đồng.');
+            throw new Error(result.message || 'Không thể lưu hội đồng.');
         }
         closeCreateCouncilModal();
         selectedFilterPeriodId = String(periodId);
@@ -691,8 +766,10 @@ async function createCouncil(event) {
         renderFilterPeriodSelect();
         await loadCouncils();
     } catch (error) {
-        console.error('Lỗi POST tạo hội đồng:', error);
-        await showAlert(error.message || 'Không thể thành lập hội đồng.');
+        console.error('Lỗi lưu hội đồng:', error);
+        await showAlert(error.message || 'Không thể lưu hội đồng.');
+    } finally {
+        saveButton.disabled = false;
     }
 }
 
@@ -718,24 +795,24 @@ async function viewCouncilDetail(councilId) {
             .join(', ') || '-';
         document.getElementById('councilDetailContent').innerHTML = `
             <div style="background: #f8fafc; padding: 16px; border-radius: 8px; border: 1px solid #e2e8f0;">
-                <p><strong>Tên hội đồng:</strong> ${council.name}</p>
-                <p><strong>Đợt đăng ký:</strong> ${council.periodName || '-'}</p>
-                <p><strong>Ngày bảo vệ:</strong> ${council.defenseDate || '-'}</p>
-                <p><strong>Địa điểm:</strong> ${council.location || '-'}</p>
-                <p><strong>Chủ tịch:</strong> ${council.chairmanName || '-'}</p>
-                <p><strong>Thư ký:</strong> ${council.secretaryName || '-'}</p>
-                <p><strong>Ủy viên:</strong> ${committeeMembers}</p>
-                <p><strong>Ghi chú:</strong> ${council.notes || '-'}</p>
+                <p><strong>Tên hội đồng:</strong> ${escapeText(council.name)}</p>
+                <p><strong>Đợt đăng ký:</strong> ${escapeText(council.periodName || '-')}</p>
+                <p><strong>Ngày bảo vệ:</strong> ${escapeText(council.defenseDate || '-')}</p>
+                <p><strong>Địa điểm:</strong> ${escapeText(council.location || '-')}</p>
+                <p><strong>Chủ tịch:</strong> ${escapeText(council.chairmanName || '-')}</p>
+                <p><strong>Thư ký:</strong> ${escapeText(council.secretaryName || '-')}</p>
+                <p><strong>Ủy viên:</strong> ${escapeText(committeeMembers)}</p>
+                <p><strong>Ghi chú:</strong> ${escapeText(council.notes || '-')}</p>
             </div>
         `;
         document.getElementById('councilDetailTopicsBody').innerHTML = topics.length
             ? topics.map(topic => `
                 <tr>
-                    <td><strong>${topic.code || `DT${String(topic.id).padStart(3, '0')}`}</strong></td>
-                    <td>${topic.titleVi || topic.title || '-'}</td>
-                    <td>${topic.primaryAdvisorName || topic.advisorName || '-'}</td>
-                    <td>${topic.assignedGroupName || topic.studentGroupName || topic.group?.name || '-'}</td>
-                    <td>${topic.defenseTime || council.defenseTime || council.defenseDate || '-'}</td>
+                    <td><strong>${escapeText(topic.code || `DT${String(topic.id).padStart(3, '0')}`)}</strong></td>
+                    <td>${escapeText(topic.titleVi || topic.title || '-')}</td>
+                    <td>${escapeText(topic.primaryAdvisorName || topic.advisorName || '-')}</td>
+                    <td>${escapeText(topic.assignedGroupName || topic.studentGroupName || topic.group?.name || '-')}</td>
+                    <td>${escapeText(topic.defenseTime || council.defenseTime || council.defenseDate || '-')}</td>
                 </tr>
             `).join('')
             : '<tr><td colspan="100%" class="text-center py-4">Chưa có dữ liệu</td></tr>';
@@ -773,7 +850,7 @@ async function openAssignTopicsModal(councilId) {
         topicsList.innerHTML = topics.map(topic => `
             <label style="display: flex; align-items: flex-start; gap: 10px; padding: 8px 12px; border-radius: 6px; border: 1px solid #e2e8f0; background: #ffffff; cursor: pointer; margin-bottom: 4px;">
                 <input type="checkbox" name="councilTopicId" value="${topic.id}" ${currentIds.has(topic.id) ? 'checked' : ''} style="width: 18px; height: 18px; min-width: 18px; max-width: 18px; margin: 0; padding: 0; margin-top: 2px; flex-shrink: 0; cursor: pointer;">
-                <span style="font-size: 13.5px; color: #1e293b;"><strong>${topic.code || `DT${String(topic.id).padStart(3, '0')}`}</strong> — ${topic.titleVi || topic.title || ''}</span>
+                <span style="font-size: 13.5px; color: #1e293b;"><strong>${escapeText(topic.code || `DT${String(topic.id).padStart(3, '0')}`)}</strong> — ${escapeText(topic.titleVi || topic.title || '')}</span>
             </label>
         `).join('') || '<span style="color: #64748b;">Đợt này chưa có đề tài.</span>';
         document.getElementById('assignCouncilId').value = council.id;
@@ -854,6 +931,8 @@ function closeCouncilDetailModal() {
 }
 
 window.viewCouncilDetail = viewCouncilDetail;
+window.openEditCouncilModal = openEditCouncilModal;
+window.deleteCouncil = deleteCouncil;
 window.openAssignTopicsModal = openAssignTopicsModal;
 window.closeCreateCouncilModal = closeCreateCouncilModal;
 window.closeAssignTopicsModal = closeAssignTopicsModal;

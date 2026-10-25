@@ -6,6 +6,13 @@ function escapeText(value) {
     })[character]);
 }
 
+function getAssignedGroupLabel(topic) {
+    if (topic.assignedGroupId != null || topic.isAssigned === true) {
+        return topic.assignedGroupName || (topic.assignedGroupId != null ? `Nhóm #${topic.assignedGroupId}` : 'Đã có nhóm (chưa có thông tin nhóm)');
+    }
+    return 'Chưa có nhóm đăng ký';
+}
+
 // Các thư mục con của từng cổng (cần '../' để quay về index.html)
 const PORTAL_FOLDERS = ['/admin/', '/student/', '/lecturer/'];
 

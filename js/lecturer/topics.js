@@ -16,9 +16,7 @@ function isMyTopic(t) {
 }
 
 function topicGroupText(t) {
-    return t.isAssigned
-        ? `<span style="color:#b45309; font-weight:600;">${escapeHtml(t.assignedGroupName || 'Đã có nhóm')}</span>`
-        : '<span style="color:#15803d;">Chưa có</span>';
+    return `<span style="color:${t.isAssigned || t.assignedGroupId != null ? '#b45309' : '#15803d'}; font-weight:600;">${escapeText(getAssignedGroupLabel(t))}</span>`;
 }
 
 async function showTopicDetail(id) {
@@ -256,7 +254,7 @@ document.addEventListener('DOMContentLoaded', () => {
             ? await callAPI('/topics/' + editId, { method: 'PUT', body: payload })
             : await callAPI('/topics', { method: 'POST', body: payload });
         if (ok) {
-            await showAlert(editId ? 'Đã cập nhật đề tài!' : 'Đề xuất đề tài thành công! Đề tài đang chờ Trưởng bộ môn duyệt.');
+            await showAlert(editId ? 'Đã cập nhật đề tài!' : 'Đề xuất đề tài thành công! Đề tài đang chờ Trưởng khoa duyệt.');
             closeCreateTopic();
             document.getElementById('btnReloadTopics').click();
         } else {
@@ -310,7 +308,7 @@ async function loadHeadDepartments() {
 }
 
 function canApprove(t) {
-    return headDeptIds.has(String(t.departmentId)) && t.approvalStatus === 'PENDING';
+    return ['ROLE_ADMIN', 'ROLE_DEAN'].includes(getMe()?.role) && t.approvalStatus === 'PENDING';
 }
 
 function updateApprovalNotice() {

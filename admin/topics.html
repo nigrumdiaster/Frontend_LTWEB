@@ -116,6 +116,7 @@
                             <th>GVHD CHÍNH / ĐỒNG</th>
                             <th>SV TỐI ĐA</th>
                             <th>TRẠNG THÁI</th>
+                            <th>NHÓM ĐĂNG KÝ</th>
                             <th style="text-align: right;">THAO TÁC</th>
                         </tr>
                     </thead>
@@ -249,10 +250,11 @@
     <div id="approvalModal" class="modal">
         <div class="modal-content" style="max-width: 450px;">
             <div class="modal-header">
-                <h3>Phê Duyệt Đề Tài</h3>
+                <h3>Trạng Thái Đề Tài</h3>
             </div>
             <form id="approvalForm">
                 <input type="hidden" id="approvalTopicId">
+                <p id="approvalStatusHint" role="status" style="font-size: 13px; color: #64748b; line-height: 1.6; margin-bottom: 16px;"></p>
 
                 <div class="form-group" style="margin-bottom: 16px;">
                     <label>Quyết định phê duyệt (*)</label>
@@ -270,7 +272,7 @@
 
                 <div style="display: flex; gap: 8px; justify-content: flex-end;">
                     <button type="button" onclick="closeModal('approvalModal')" class="btn btn-secondary">Hủy</button>
-                    <button type="submit" class="btn btn-primary">Xác Nhận</button>
+                    <button id="approvalSaveButton" type="submit" class="btn btn-primary" disabled>Xác Nhận</button>
                 </div>
             </form>
         </div>
@@ -293,6 +295,6 @@
     <script src="../js/notifications.js"></script>
     <script src="../js/config.js"></script>
     <script src="../js/pagination.js"></script>
-    <script src="../js/admin/topics.js?v=2"></script>
+    <script src="../js/admin/topics.js?v=4"></script>
 </body>
 </html>

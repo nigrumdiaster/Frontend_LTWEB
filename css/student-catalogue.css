@@ -1,0 +1,89 @@
+.catalogue-page { --catalogue-accent: #087f72; }
+.catalogue-page [hidden] { display: none !important; }
+.catalogue-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 20px; margin-bottom: 24px; }
+.catalogue-header h1 { font-size: clamp(24px, 3vw, 32px); letter-spacing: -.7px; line-height: 1.2; margin: 8px 0; }
+.catalogue-header p, .catalogue-muted { color: #64748b; font-size: 13px; line-height: 1.6; }
+.catalogue-eyebrow { color: #087f72; font-size: 11px; letter-spacing: .9px; font-weight: 700; text-transform: uppercase; }
+.catalogue-nav-link { color: #334155; font-size: 13px; font-weight: 600; text-decoration: none; border-bottom: 1px solid #94a3b8; padding-bottom: 4px; white-space: nowrap; margin-top: 12px; }
+.catalogue-feature { margin-bottom: 24px; }
+.catalogue-section-label { font-size: 12px; color: #475569; font-weight: 700; margin: 0 0 12px; display: flex; align-items: center; gap: 8px; }
+.catalogue-section-label::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: #087f72; }
+.period-card, .topic-card { background: white; border: 1px solid #dfe6ed; border-radius: 16px; padding: 22px; min-width: 0; display: flex; flex-direction: column; gap: 12px; box-shadow: 0 2px 3px #0f172a03; }
+.period-card.featured { border-color: #a6d9cf; background: linear-gradient(115deg, #f0faf6, #fff 75%); padding: 26px; }
+.catalogue-card-top, .catalogue-card-bottom { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
+.period-card h2, .topic-card h2 { font-size: 18px; line-height: 1.5; color: #142b38; margin: 0; overflow-wrap: anywhere; letter-spacing: -.25px; }
+.period-card.featured h2 { font-size: 23px; }
+.catalogue-badge { display: inline-flex; align-items: center; gap: 5px; border-radius: 999px; padding: 5px 9px; background: #f1f5f9; color: #475569; font-size: 11px; font-weight: 600; white-space: nowrap; }
+.catalogue-badge.open { color: #087f5b; background: #dcf6e8; }
+.catalogue-badge.upcoming { color: #996415; background: #fff3db; }
+.catalogue-badge.closed { color: #b42332; background: #ffe9eb; }
+.period-progress { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); list-style: none; padding: 8px 0; margin: 0; }
+.period-progress li { display: flex; flex-direction: column; align-items: center; gap: 7px; font-size: 10px; color: #758394; position: relative; text-align: center; line-height: 1.4; }
+.period-progress li::before { content: ''; height: 2px; position: absolute; top: 12px; left: -50%; right: 50%; background: #e2e8f0; }
+.period-progress li:first-child::before { display: none; }
+.step-dot { width: 26px; height: 26px; border: 2px solid #dfe6ed; border-radius: 50%; display: grid; place-items: center; background: white; z-index: 1; font-size: 11px; font-weight: 700; }
+.period-progress .done { color: #087f72; }
+.period-progress .done .step-dot { background: #e3f5ee; border-color: #b8e0d3; }
+.period-progress .current { color: #087f72; font-weight: 700; }
+.period-progress .current .step-dot { background: #087f72; color: white; border-color: #087f72; box-shadow: 0 0 0 4px #087f7214; }
+.period-dates { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; padding: 14px 0; border-top: 1px solid #e5ecee; border-bottom: 1px solid #e5ecee; }
+.period-dates span, .topic-facts dt { color: #64748b; font-size: 11px; display: block; margin-bottom: 5px; }
+.period-dates strong { font-size: 12px; color: #334155; font-weight: 600; }
+.catalogue-stage { font-size: 11px; color: #475569; }
+.catalogue-actions { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-top: auto; }
+.catalogue-actions .btn { font-size: 12px; text-decoration: none; display: inline-flex; align-items: center; justify-content: center; gap: 14px; }
+.catalogue-page .btn-primary { background: #087f72; border-color: #087f72; color: white; }
+.catalogue-page .btn-primary:hover { background: #06685e; }
+.catalogue-panel { background: white; border: 1px solid #e2e8f0; border-radius: 16px; padding: 20px; }
+.catalogue-filters { display: grid; grid-template-columns: minmax(150px, 1fr) minmax(150px, 1fr) minmax(200px, 1.5fr) auto; gap: 12px; align-items: end; }
+.catalogue-filters label { display: block; font-size: 12px; color: #475569; margin-bottom: 7px; font-weight: 500; }
+.catalogue-filters input, .catalogue-filters select { width: 100%; min-width: 0; }
+.catalogue-filters > div { min-width: 0; }
+.catalogue-filter-actions { display: flex; gap: 6px; }
+.catalogue-toolbar { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin: 20px 0 16px; padding-top: 18px; border-top: 1px solid #edf1f5; }
+.catalogue-toolbar p { font-size: 12px; color: #64748b; }
+.catalogue-switch { display: inline-flex; gap: 3px; background: #f1f5f9; padding: 3px; border-radius: 8px; }
+.catalogue-switch button { background: transparent; border: 0; color: #64748b; padding: 7px 12px; border-radius: 6px; font-size: 12px; cursor: pointer; }
+.catalogue-switch button[aria-pressed=true] { background: white; box-shadow: 0 1px 3px #0f172a16; color: #0f172a; font-weight: 600; }
+.catalogue-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+.catalogue-empty { grid-column: 1 / -1; padding: 36px 20px; text-align: center; color: #64748b; border: 1px dashed #d7e1e7; border-radius: 12px; }
+.catalogue-empty > span { font-size: 28px; color: #8da5ae; }
+.catalogue-empty p { font-size: 13px; margin-top: 8px; line-height: 1.6; }
+.catalogue-error { padding: 12px 16px; margin: 12px 0; border-radius: 10px; background: #fff1f2; color: #b42332; font-size: 13px; }
+.catalogue-table-wrap { max-width: 100%; overflow: auto; }
+.catalogue-table-wrap table { width: 100%; border-collapse: collapse; font-size: 12px; }
+.catalogue-table-wrap th { background: #f8fafc; color: #64748b; font-weight: 600; text-align: left; }
+.catalogue-table-wrap th, .catalogue-table-wrap td { padding: 12px; border-bottom: 1px solid #edf1f5; }
+.catalogue-table-wrap td { min-width: 90px; }
+.catalogue-table-wrap td:nth-child(2) { min-width: 180px; }
+.topic-code { font-size: 11px; font-weight: 700; color: #087f72; letter-spacing: .6px; }
+.topic-registered-group { padding: 10px 12px; border-radius: 8px; background: #f8fafc; font-size: 12px; line-height: 1.6; overflow-wrap: anywhere; color: #334155; }
+.topic-registered-group > span { color: #64748b; }
+.topic-description { color: #64748b; font-size: 12px; line-height: 1.7; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.topic-facts { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin: 2px 0; }
+.topic-facts dd { color: #334155; font-size: 12px; line-height: 1.6; overflow-wrap: anywhere; }
+.topic-card .catalogue-actions { border-top: 1px solid #edf1f5; padding-top: 14px; }
+.catalogue-check { display: inline-flex; align-items: center; gap: 8px; font-size: 12px; color: #334155; cursor: pointer; }
+.catalogue-check input { accent-color: #087f72; width: 16px; height: 16px; }
+.catalogue-context { border: 1px solid #cfe4de; border-left: 4px solid #087f72; background: #f4faf7; padding: 20px 24px; border-radius: 12px; margin-bottom: 20px; }
+.catalogue-context h2 { font-size: 18px; margin: 10px 0 5px; }
+.catalogue-context .period-progress { margin-top: 12px; max-width: 700px; }
+.catalogue-hint { font-size: 12px; color: #64748b; line-height: 1.7; margin-top: 16px; }
+.catalogue-modal-link { margin-right: auto; }
+.catalogue-page :is(button, a, input):focus-visible { outline: 3px solid #087f7266; outline-offset: 3px; }
+@media (min-width: 1600px) { .catalogue-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+@media (max-width: 1200px) { .catalogue-filters { grid-template-columns: 1fr 1fr; } .catalogue-filter-actions { align-self: end; } }
+@media (max-width: 650px) {
+    .catalogue-grid { grid-template-columns: minmax(0, 1fr); }
+    .catalogue-header { flex-direction: column; gap: 4px; }
+    .catalogue-header h1 { font-size: 26px; }
+    .catalogue-nav-link { margin-top: 0; }
+    .catalogue-panel, .period-card, .period-card.featured, .topic-card { padding: 16px; border-radius: 12px; }
+    .catalogue-filters { grid-template-columns: minmax(0, 1fr); }
+    .period-card.featured h2 { font-size: 20px; }
+    .catalogue-context { padding: 16px; }
+    .period-progress li { font-size: 9px; }
+    .period-progress { gap: 2px; }
+    .catalogue-card-top { align-items: flex-start; }
+    .catalogue-toolbar { align-items: flex-start; }
+}

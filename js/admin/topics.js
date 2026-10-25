@@ -509,9 +509,10 @@ function renderTopicsTable(topics) {
             </td>
             <td><span class="badge badge-secondary">${escapeText(t.maxStudents ?? '-')} SV</span></td>
             <td>${formatStatusBadge(t.approvalStatus)}</td>
+            <td>${renderAssignedGroup(t)}</td>
             <td style="text-align: right; white-space: nowrap;">
                 <button onclick="openDetailTopicModal(${t.id})" class="btn btn-sm btn-action-view" title="Xem chi tiết">👁️ Chi tiết</button>
-                <button onclick="openApprovalModal(${t.id}, '${t.approvalStatus}')" class="btn btn-sm btn-primary">✔️ Duyệt</button>
+                <button onclick="openApprovalModal(${t.id})" class="btn btn-sm btn-primary">✔️ Trạng thái</button>
                 <button onclick="openEditTopicModal(${t.id})" class="btn btn-sm btn-action-edit">Sửa</button>
                 <button onclick="deleteTopic(${t.id})" class="btn btn-sm btn-action-delete">Xóa</button>
             </td>
@@ -522,6 +523,84 @@ function renderTopicsTable(topics) {
 function showTableMessage(msg) {
     const tbody = document.getElementById('topicTableBody');
     if (tbody) tbody.innerHTML = `<tr><td colspan="100%" class="text-center py-4">${msg}</td></tr>`;
+}
+
+function renderAssignedGroup(topic) {
+    const label = escapeText(getAssignedGroupLabel(topic));
+    const groupId = Number(topic.assignedGroupId);
+    return Number.isSafeInteger(groupId) && groupId > 0
+        ? `<button type="button" onclick="openRegisteredGroup(${groupId})" class="btn btn-ghost btn-sm" style="color: #1e40af; font-weight: 600; text-align: left; text-decoration: underline;">${label}</button>`
+        : `<span style="color: ${topic.isAssigned ? '#b45309' : '#64748b'};">${label}</span>`;
+}
+
+let registeredGroupRequest = 0;
+let registeredGroupTrigger = null;
+
+function ensureRegisteredGroupModal() {
+    let modal = document.getElementById('registeredGroupModal');
+    if (modal) return modal;
+    modal = document.createElement('div');
+    modal.id = 'registeredGroupModal';
+    modal.className = 'modal';
+    modal.style.zIndex = '1100';
+    modal.setAttribute('role', 'dialog');
+    modal.setAttribute('aria-modal', 'true');
+    modal.setAttribute('aria-labelledby', 'registeredGroupTitle');
+    modal.innerHTML = `<div class="modal-content" style="max-width: 800px;">
+        <div class="modal-header"><h3 id="registeredGroupTitle">Thông tin nhóm đăng ký</h3></div>
+        <div id="registeredGroupContent" style="margin: 16px 0; line-height: 1.7;" aria-live="polite"></div>
+        <div style="display:flex; justify-content:flex-end;"><button type="button" class="btn btn-secondary" onclick="closeRegisteredGroup()">Đóng</button></div>
+    </div>`;
+    modal.addEventListener('click', event => { if (event.target === modal) closeRegisteredGroup(); });
+    modal.addEventListener('keydown', event => {
+        if (event.key === 'Escape') { event.preventDefault(); event.stopPropagation(); closeRegisteredGroup(); }
+        if (event.key === 'Tab') {
+            const controls = [...modal.querySelectorAll('button, a[href], [tabindex="0"]')].filter(item => item.getClientRects().length);
+            const first = controls[0], last = controls.at(-1);
+            if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last?.focus(); }
+            else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first?.focus(); }
+        }
+    });
+    document.body.append(modal);
+    return modal;
+}
+
+async function openRegisteredGroup(groupId) {
+    const version = ++registeredGroupRequest;
+    const modal = ensureRegisteredGroupModal();
+    registeredGroupTrigger = document.activeElement;
+    const content = document.getElementById('registeredGroupContent');
+    content.textContent = 'Đang tải thông tin nhóm…';
+    modal.style.display = 'flex';
+    modal.querySelector('button').focus();
+    try {
+        const response = await apiFetch(`/groups/${groupId}`);
+        const result = await response.json();
+        if (version !== registeredGroupRequest) return;
+        if (!response.ok || !result.success || !result.data) throw new Error(result.message || 'Không thể tải thông tin nhóm.');
+        const group = result.data;
+        const members = Array.isArray(group.members) ? group.members : [];
+        const leader = group.leaderName || members.find(member => member.groupRole === 'LEADER')?.studentName || 'Chưa cập nhật';
+        const statuses = { FORMING: 'Đang lập nhóm', REGISTERED: 'Đã đăng ký đề tài', APPROVED: 'Đã duyệt', IN_PROGRESS: 'Đang thực hiện', SUBMITTED: 'Đã nộp báo cáo', DEFENDED: 'Đã bảo vệ', COMPLETED: 'Hoàn thành' };
+        content.innerHTML = `<p><strong>Tên nhóm:</strong> ${escapeText(group.name || 'Chưa cập nhật')}</p>
+            <p><strong>Mã nhóm:</strong> ${escapeText(group.code || `Nhóm #${group.id}`)}</p>
+            <p><strong>Đợt đăng ký:</strong> ${escapeText(group.periodName || '-')}</p>
+            <p><strong>Đề tài:</strong> ${escapeText(group.topicTitleVi || group.topic?.titleVi || 'Chưa đăng ký')}</p>
+            <p><strong>Nhóm trưởng:</strong> ${escapeText(leader)}</p>
+            <p><strong>Trạng thái:</strong> ${escapeText(statuses[group.status] || group.status || '-')} · <strong>Số thành viên:</strong> ${members.length}</p>
+            <h4 style="margin: 16px 0 8px;">Thành viên nhóm</h4>
+            <table class="data-table"><thead><tr><th>Mã SV</th><th>Họ và tên</th><th>Lớp</th><th>Email</th><th>Vai trò</th></tr></thead>
+            <tbody>${members.map(member => `<tr><td>${escapeText(member.studentCode || '-')}</td><td>${escapeText(member.studentName || '-')}</td><td>${escapeText(member.studentClass || '-')}</td><td>${escapeText(member.studentEmail || '-')}</td><td>${member.groupRole === 'LEADER' ? 'Nhóm trưởng' : 'Thành viên'}</td></tr>`).join('') || '<tr><td colspan="5">Chưa có thông tin thành viên.</td></tr>'}</tbody></table>`;
+    } catch (error) {
+        if (version !== registeredGroupRequest) return;
+        content.textContent = error.message || 'Không thể tải thông tin nhóm. Vui lòng thử lại.';
+    }
+}
+
+function closeRegisteredGroup() {
+    ++registeredGroupRequest;
+    document.getElementById('registeredGroupModal').style.display = 'none';
+    if (registeredGroupTrigger?.isConnected) registeredGroupTrigger.focus();
 }
 
 // 2. POST /api/topics - Đề xuất đề tài mới
@@ -546,7 +625,7 @@ async function handleCreateTopic(e) {
         periodId: parseInt(periodVal, 10),
         departmentId: parseInt(deptVal, 10),
         maxStudents: parseInt(document.getElementById('createMaxStudents').value, 10),
-        coAdvisorId: coAdvisorVal ? parseInt(coAdvisorVal) : 0,
+        coAdvisorId: coAdvisorVal ? parseInt(coAdvisorVal, 10) : null,
         description: document.getElementById('createDescription').value.trim(),
         requirements: document.getElementById('createRequirements').value.trim()
     };
@@ -625,7 +704,7 @@ async function handleEditTopic(e) {
         titleEn: document.getElementById('editTitleEn').value.trim(),
         departmentId: parseInt(deptVal, 10),
         maxStudents: parseInt(document.getElementById('editMaxStudents').value, 10),
-        coAdvisorId: coAdvisorVal ? parseInt(coAdvisorVal) : 0,
+        coAdvisorId: coAdvisorVal ? parseInt(coAdvisorVal, 10) : null,
         description: document.getElementById('editDescription').value.trim(),
         requirements: document.getElementById('editRequirements').value.trim()
     };
@@ -655,25 +734,64 @@ async function handleEditTopic(e) {
 }
 
 // 5. PATCH /api/topics/{id}/approval - Duyệt đề tài
-function openApprovalModal(id, currentStatus) {
-    document.getElementById('approvalTopicId').value = id;
-    document.getElementById('approvalStatusSelect').value = currentStatus || 'APPROVED';
-    toggleRejectionReason();
-    document.getElementById('approvalModal').style.display = 'flex';
+let approvalInitialStatus = '';
+let approvalAssigned = false;
+let approvalRequestVersion = 0;
+let savingApproval = false;
+
+async function openApprovalModal(id) {
+    if (savingApproval) return;
+    const version = ++approvalRequestVersion;
+    try {
+        const response = await apiFetch(`/topics/${id}`, { headers: { 'Authorization': `Bearer ${getToken()}` } });
+        const result = await response.json();
+        if (version !== approvalRequestVersion) return;
+        if (!response.ok || !result.success || !result.data) throw new Error(result.message || 'Không thể tải trạng thái đề tài.');
+        const topic = result.data;
+        approvalInitialStatus = topic.approvalStatus || 'PENDING';
+        approvalAssigned = topic.isAssigned === true;
+        document.getElementById('approvalTopicId').value = topic.id;
+        document.getElementById('rejectionReason').value = topic.rejectionReason || '';
+        const select = document.getElementById('approvalStatusSelect');
+        [...select.options].forEach(option => { option.disabled = approvalAssigned && option.value !== 'APPROVED'; });
+        select.value = approvalInitialStatus;
+        document.getElementById('approvalStatusHint').textContent = approvalAssigned
+            ? 'Đề tài đã có nhóm đăng ký. Bạn vẫn có thể sửa thông tin; không thể chuyển về chờ duyệt hoặc từ chối khi nhóm còn gắn với đề tài.'
+            : 'Bạn có thể thay đổi trạng thái đề tài. Chọn quyết định mới rồi xác nhận.';
+        toggleRejectionReason();
+        document.getElementById('approvalModal').style.display = 'flex';
+    } catch (error) {
+        if (version !== approvalRequestVersion) return;
+        await showAlert(error.message || 'Không thể tải trạng thái đề tài.', 'error');
+    }
 }
 
 function toggleRejectionReason() {
     const status = document.getElementById('approvalStatusSelect').value;
     const group = document.getElementById('rejectionReasonGroup');
     if (group) group.style.display = status === 'REJECTED' ? 'block' : 'none';
+    document.getElementById('rejectionReason').required = status === 'REJECTED';
+    document.getElementById('approvalSaveButton').disabled = savingApproval || !status || status === approvalInitialStatus || (approvalAssigned && status !== 'APPROVED');
 }
 
 async function handleApproval(e) {
     e.preventDefault();
+    if (savingApproval) return;
     const id = document.getElementById('approvalTopicId').value;
     const status = document.getElementById('approvalStatusSelect').value;
     const reason = document.getElementById('rejectionReason').value.trim();
+    if (!status || status === approvalInitialStatus) return;
+    if (approvalAssigned && status !== 'APPROVED') {
+        await showAlert('Đề tài đã có nhóm đăng ký, không thể thu hồi phê duyệt hoặc từ chối.', 'error');
+        return;
+    }
+    if (status === 'REJECTED' && !reason) {
+        await showAlert('Vui lòng nhập lý do từ chối.');
+        return;
+    }
 
+    savingApproval = true;
+    toggleRejectionReason();
     try {
         const response = await apiFetch(`/topics/${id}/approval`, {
             method: 'PATCH',
@@ -698,13 +816,16 @@ async function handleApproval(e) {
     } catch (error) {
         console.error('Lỗi PATCH approval:', error);
         await showAlert('Không thể cập nhật trạng thái đề tài. Vui lòng thử lại.', 'error');
+    } finally {
+        savingApproval = false;
+        toggleRejectionReason();
     }
 }
 
 // 6. DELETE /api/topics/{id} - Xóa đề tài
 async function deleteTopic(id) {
     const name = topicDeleteLabels.get(String(id));
-    if (!(await confirmAction(`Bạn có chắc muốn xóa đề tài ${name ? `“${name}”` : 'này'}?`))) return;
+    if (!(await confirmAction(`Bạn có chắc muốn xóa đề tài ${name ? `“${name}”` : 'này'}?\n\nNhóm và thành viên được giữ lại, nhưng nhóm sẽ được gỡ khỏi đề tài và trở về trạng thái đang lập nhóm. Thông tin báo cáo đã nộp, điểm, kết quả và các phân công phản biện/hội đồng của đề tài (nếu có) sẽ bị xóa. Thao tác này không thể hoàn tác.`))) return;
 
     try {
         const response = await apiFetch(`/topics/${id}`, {
@@ -747,6 +868,7 @@ async function openDetailTopicModal(id) {
                 <div><strong>GV Đồng HD:</strong> ${escapeText(t.coAdvisorName || 'Không có')}</div>
                 <div><strong>Số SV tối đa:</strong> ${escapeText(t.maxStudents ?? '-')} Sinh viên</div>
                 <div><strong>Trạng thái duyệt:</strong> ${formatStatusBadge(t.approvalStatus)}</div>
+                <div><strong>Nhóm đã đăng ký:</strong> ${renderAssignedGroup(t)}</div>
                 ${t.rejectionReason ? `<div style="color: #ef4444;"><strong>Lý do từ chối:</strong> ${escapeText(t.rejectionReason)}</div>` : ''}
                 <div><strong>Mô tả:</strong> ${escapeText(t.description || 'Chưa có mô tả')}</div>
                 <div><strong>Yêu cầu:</strong> ${escapeText(t.requirements || 'Chưa có yêu cầu')}</div>

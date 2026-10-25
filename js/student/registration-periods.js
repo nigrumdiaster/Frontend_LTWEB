@@ -111,6 +111,12 @@ document.addEventListener('DOMContentLoaded', async () => {
     const searchInput = document.getElementById('periodSearch');
     const countEl = document.getElementById('periodCount');
     const errorEl = document.getElementById('periodLoadError');
+    const cards = document.getElementById('periodCards');
+    let requestVersion = 0;
+    StudentDiscovery.initViews(view => {
+        cards.hidden = view !== 'cards';
+        document.getElementById('periodTableView').hidden = view !== 'table';
+    });
 
     if (!localStorage.getItem('token')) {
         await showAlert('Bạn chưa đăng nhập!');
@@ -125,6 +131,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     function render() {
         const list = periodsCache;
+        cards.innerHTML = list.length ? list.map(p => StudentDiscovery.periodCard(p)).join('') : StudentDiscovery.empty('Không có đợt phù hợp. Thử đổi bộ lọc hoặc từ khóa.');
 
         tbody.innerHTML = list.length ? list.map((p, i) => `
             <tr style="border-top: 1px solid #e2e8f0;">
@@ -137,14 +144,17 @@ document.addEventListener('DOMContentLoaded', async () => {
                 <td style="padding: 10px 12px;">${periodStatusBadge(p.status)}</td>
                 <td style="padding: 10px 12px; text-align: center;">${p.topicCount ?? '-'}</td>
                 <td style="padding: 10px 12px; text-align: center;">${p.groupCount ?? '-'}</td>
-                <td style="padding: 10px 12px;"><button type="button" class="btn btn-secondary btn-sm" onclick="showPeriodDetail(${p.id})">Chi tiết</button></td>
+                <td style="padding: 10px 12px;"><a class="btn btn-primary btn-sm" href="topics.html?periodId=${encodeURIComponent(p.id)}">Xem đề tài</a><button type="button" class="btn btn-ghost btn-sm" onclick="showPeriodDetail(${p.id})">Chi tiết</button></td>
             </tr>`).join('')
             : '<tr><td colspan="100%" class="text-center py-4">Chưa có dữ liệu</td></tr>';
-        countEl.textContent = `Hiển thị ${list.length} đợt đăng ký`;
+        countEl.textContent = `Hiển thị ${list.length} / ${getServerPagination(tbody)?.totalElements ?? list.length} đợt đăng ký`;
     }
 
     async function loadPeriods() {
+        const version = ++requestVersion;
         showError('');
+        cards.innerHTML = StudentDiscovery.empty('Đang tải các đợt đăng ký…');
+        countEl.textContent = 'Đang tải dữ liệu…';
         tbody.innerHTML = '<tr><td colspan="100%" class="text-center py-4">Đang tải dữ liệu...</td></tr>';
 
         const params = new URLSearchParams({ excludeDraft: 'true', keyword: searchInput.value.trim() });
@@ -157,20 +167,22 @@ document.addEventListener('DOMContentLoaded', async () => {
                 method: 'GET',
                 headers: { 'Content-Type': 'application/json' }
             }, 'periodTableBody', loadPeriods);
+            StudentDiscovery.movePager(tbody);
             const result = await response.json();
+            if (version !== requestVersion) return;
             if (response.ok && result.success) {
                 // Sinh viên không cần thấy đợt còn ở trạng thái nháp
                 periodsCache = Array.isArray(result.data) ? result.data : [];
                 populateFilterOptions(
                     typeFilter,
                     Object.keys(PERIOD_TYPE_LABELS),
-                    'Tất cả',
+                    'Tất cả loại đề tài',
                     type => PERIOD_TYPE_LABELS[type] || type
                 );
                 populateFilterOptions(
                     statusFilter,
                     Object.keys(PERIOD_STATUS_LABELS).filter(status => status !== 'DRAFT'),
-                    'Tất cả',
+                    'Tất cả giai đoạn',
                     status => (PERIOD_STATUS_LABELS[status] || [status])[0]
                 );
                 render();
@@ -178,17 +190,32 @@ document.addEventListener('DOMContentLoaded', async () => {
                 throw new Error(result.message || 'Không thể tải danh sách đợt đăng ký.');
             }
         } catch (error) {
+            if (version !== requestVersion) return;
             console.error('Lỗi tải đợt đăng ký:', error);
             periodsCache = [];
             tbody.innerHTML = '';
+            cards.innerHTML = StudentDiscovery.empty('Chưa tải được danh sách. Bấm “Tải lại” để thử lại.');
             countEl.textContent = '';
             showError(error.message || 'Lỗi kết nối máy chủ!');
         }
     }
 
-    document.getElementById('btnReloadPeriods').addEventListener('click', loadPeriods);
+    async function loadFeaturedPeriod() {
+        const section = document.getElementById('featuredPeriodSection');
+        try {
+            const response = await apiFetchAll('/registration-periods?status=PHASE2_STUDENT_REGISTRATION&limit=-1');
+            const result = await response.json();
+            const open = response.ok && result.success && Array.isArray(result.data)
+                ? result.data.filter(p => StudentDiscovery.registration(p).open).sort((a, b) => Date.parse(a.studentRegEnd) - Date.parse(b.studentRegEnd)) : [];
+            section.hidden = !open.length;
+            document.getElementById('featuredPeriod').innerHTML = open.length ? StudentDiscovery.periodCard(open[0], true) : '';
+        } catch { section.hidden = true; }
+    }
+
+    document.getElementById('btnReloadPeriods').addEventListener('click', () => { loadPeriods(); loadFeaturedPeriod(); });
     typeFilter.addEventListener('change', loadPeriods);
     statusFilter.addEventListener('change', loadPeriods);
     searchInput.addEventListener('input', debounce(loadPeriods));
     loadPeriods();
+    loadFeaturedPeriod();
 });

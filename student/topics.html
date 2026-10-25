@@ -6,6 +6,7 @@
     <title>Đề Tài Đã Công Bố - Sinh Viên - FIT Topic Manager</title>
     <link rel="stylesheet" href="../css/style.css">
     <link rel="stylesheet" href="../css/responsive.css">
+    <link rel="stylesheet" href="../css/student-catalogue.css">
     <link rel="stylesheet" href="../js/vendor/sweetalert2/sweetalert2.min.css">
 </head>
 <body>
@@ -40,57 +41,28 @@
         </aside>
 
         <!-- NỘI DUNG CHÍNH BÊN PHẢI -->
-        <main class="main-wrapper">
-            <div class="page-header" style="margin-bottom: 24px;">
-                <div class="page-title">
-                    <h1 style="font-size: 24px; color: #0f172a; margin-bottom: 4px;">Đề Tài Đã Công Bố</h1>
-                    <p style="color: #64748b; font-size: 14px;">Danh sách đề tài đã được trưởng bộ môn phê duyệt và công bố</p>
+        <main class="main-wrapper catalogue-page">
+            <header class="catalogue-header">
+                <div><span class="catalogue-eyebrow">FIT TOPIC / CỔNG SINH VIÊN</span><h1>Khám phá đề tài</h1><p>Tìm ý tưởng phù hợp, xem giảng viên hướng dẫn và chọn đề tài cho nhóm.</p></div>
+                <a class="catalogue-nav-link" href="registration-periods.html">← Xem các đợt đăng ký</a>
+            </header>
+            <section id="selectedPeriodContext" class="catalogue-context" aria-label="Đợt đang chọn" hidden></section>
+            <section class="catalogue-panel" aria-label="Đề tài đã công bố">
+                <div class="catalogue-filters">
+                    <div><label for="periodFilter">Đợt đăng ký</label><select id="periodFilter"><option value="">Tất cả đợt đăng ký</option></select></div><div><label for="deptFilter">Bộ môn</label><select id="deptFilter"><option value="">Tất cả bộ môn</option></select></div>
+                    <div><label for="topicSearch">Tìm kiếm</label><input id="topicSearch" type="search" placeholder="Mã, tên đề tài, giảng viên…"></div>
+                    <div class="catalogue-filter-actions"><button type="button" id="btnReloadTopics" class="btn btn-secondary">Tải lại</button><button type="button" id="btnResetFilters" class="btn btn-ghost">Đặt lại</button></div>
                 </div>
-            </div>
-
-            <div style="background: white; border-radius: 12px; padding: 24px; border: 1px solid #e2e8f0;">
-                <div style="display: flex; gap: 12px; flex-wrap: wrap; align-items: flex-end; margin-bottom: 20px;">
-                    <div>
-                        <label for="periodFilter" style="display: block; color: #64748b; font-size: 13px; margin-bottom: 4px;">Đợt đăng ký</label>
-                        <select id="periodFilter" style="padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 8px; min-width: 260px;">
-                            <option value="">Tất cả</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label for="deptFilter" style="display: block; color: #64748b; font-size: 13px; margin-bottom: 4px;">Bộ môn</label>
-                        <select id="deptFilter" style="padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 8px; min-width: 220px;">
-                            <option value="">Tất cả</option>
-                        </select>
-                    </div>
-                    <div style="flex: 1; min-width: 200px;">
-                        <label for="topicSearch" style="display: block; color: #64748b; font-size: 13px; margin-bottom: 4px;">Tìm kiếm</label>
-                        <input type="text" id="topicSearch" placeholder="Mã, tên đề tài, giảng viên..." style="width: 100%; padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 8px; box-sizing: border-box;">
-                    </div>
-                    <button type="button" id="btnReloadTopics" class="btn btn-secondary">Tải lại</button>
-                    <button type="button" id="btnResetFilters" class="btn btn-secondary">Đặt lại</button>
+                <div class="catalogue-toolbar">
+                    <p id="topicCount" role="status" aria-live="polite">Đang tải dữ liệu…</p><label class="catalogue-check"><input id="onlyAvailableTopics" type="checkbox"> Chỉ hiện đề tài còn trống</label>
+                    <div class="catalogue-switch" role="group" aria-label="Cách hiển thị danh sách"><button type="button" data-catalogue-view="cards" aria-pressed="true">▦ Thẻ</button><button type="button" data-catalogue-view="table" aria-pressed="false">☰ Bảng</button></div>
                 </div>
-
-                <div style="overflow-x: auto;">
-                    <table style="width: 100%; border-collapse: collapse; font-size: 14px;">
-                        <thead>
-                            <tr style="background: #f1f5f9; text-align: left; color: #475569;">
-                                <th style="padding: 10px 12px;">#</th>
-                                <th style="padding: 10px 12px;">Mã</th>
-                                <th style="padding: 10px 12px;">Tên đề tài</th>
-                                <th style="padding: 10px 12px;">GV hướng dẫn</th>
-                                <th style="padding: 10px 12px;">Bộ môn</th>
-                                <th style="padding: 10px 12px;">Đợt</th>
-                                <th style="padding: 10px 12px;">SV tối đa</th>
-                                <th style="padding: 10px 12px;">Tình trạng</th>
-                                <th style="padding: 10px 12px;"></th>
-                            </tr>
-                        </thead>
-                        <tbody id="topicTableBody"></tbody>
-                    </table>
-                </div>
-                <p id="topicCount" style="margin-top: 12px; color: #64748b; font-size: 13px;"></p>
-                <p id="topicLoadError" role="status" style="display: none; margin-top: 12px; color: #b91c1c;"></p>
-            </div>
+                <p id="topicLoadError" class="catalogue-error" role="alert" style="display:none;"></p>
+                <div id="topicCards" class="catalogue-grid" aria-label="Các đề tài đã công bố"></div>
+                <div id="topicTableView" class="catalogue-table-wrap" hidden><table><thead><tr><th>#</th><th>Mã</th><th>Tên đề tài</th><th>GV hướng dẫn</th><th>Bộ môn</th><th>Đợt</th><th>SV tối đa</th><th>Tình trạng</th><th>Thao tác</th></tr></thead><tbody id="topicTableBody"></tbody></table></div>
+                <div id="cataloguePagination"></div>
+                <p class="catalogue-hint">Nhóm trưởng đăng ký đề tài tại “Nhóm của tôi”. Nhóm cần đủ 3–5 sinh viên và đáp ứng thời gian đăng ký của đợt.</p>
+            </section>
         </main>
     </div>
 
@@ -102,6 +74,7 @@
             </div>
             <div id="topicModalBody" style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin: 16px 0;"></div>
             <div style="display: flex; justify-content: flex-end;">
+                <a id="topicModalGroupLink" class="btn btn-primary catalogue-modal-link" href="my-group.html" hidden>Đến nhóm của tôi</a>
                 <button type="button" onclick="closeTopicModal()" class="btn btn-secondary">Đóng</button>
             </div>
         </div>
@@ -112,6 +85,7 @@
     <script src="../js/config.js"></script>
     <script src="../js/pagination.js"></script>
     <script src="../js/auth.js"></script>
-    <script src="../js/student/topics_student.js"></script>
+    <script src="../js/student/discovery.js"></script>
+    <script src="../js/student/topics.js"></script>
 </body>
 </html>
