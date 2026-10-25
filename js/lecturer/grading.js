@@ -21,9 +21,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function render() {
-        const kw = removeVietnameseTones(searchInput.value);
-        const list = items.filter(({ topic: t }) => !kw ||
-            [t.code, t.titleVi, t.assignedGroupName].some(v => removeVietnameseTones(v).includes(kw)));
+        const list = items;
 
         if (!list.length) {
             area.innerHTML = `<div style="${card} color:#64748b;">Chưa có đề tài nào cần chấm. Đề tài chỉ hiện ở đây khi đã có nhóm sinh viên nhận.</div>`;
@@ -79,10 +77,10 @@ document.addEventListener('DOMContentLoaded', () => {
         showError('');
         area.innerHTML = `<div style="${card} color:#64748b;">Đang tải...</div>`;
         const me = getMe();
-        const { ok, result } = await callAPI('/topics', { method: 'GET' });
+        const { ok, result } = await callAPI('/topics?isAssigned=true&advisorId=' + encodeURIComponent(me.id) + '&keyword=' + encodeURIComponent(searchInput.value.trim()), { method: 'GET', pagination: { target: 'gradingArea', reload: load } });
         if (!ok) { area.innerHTML = ''; showError(result.message || 'Không thể tải danh sách đề tài.'); return; }
 
-        const topics = (Array.isArray(result.data) ? result.data : []).filter(t => isMyTopic(t) && t.isAssigned);
+        const topics = (Array.isArray(result.data) ? result.data : []);
         items = await Promise.all(topics.map(async t => {
             const g = await callAPI('/grades/topic/' + t.id, { method: 'GET' });
             const list = g.ok && Array.isArray(g.result.data) ? g.result.data : [];
@@ -93,6 +91,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     document.getElementById('btnReloadGrading').addEventListener('click', load);
-    searchInput.addEventListener('input', render);
+    searchInput.addEventListener('input', debounce(load));
     load();
 });

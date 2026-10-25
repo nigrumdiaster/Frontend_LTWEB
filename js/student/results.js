@@ -150,10 +150,10 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
         area.innerHTML = `<div style="${card} color:#64748b;">Đang tải...</div>`;
         try {
-            const response = await apiFetch('/results/student/my-results?periodId=' + encodeURIComponent(periodId), {
+            const response = await apiFetchTable('/results/student/my-results?periodId=' + encodeURIComponent(periodId), {
                 method: 'GET',
                 headers: { 'Content-Type': 'application/json' }
-            });
+            }, 'resultArea', loadResults);
             const result = await response.json();
             if (version !== requestVersion) return;
 
@@ -189,7 +189,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         periodSelect.disabled = true;
         showError('');
         try {
-            const response = await apiFetch('/results/student/periods', { method: 'GET' });
+            const response = await apiFetchAll('/results/student/periods', { method: 'GET' });
             const result = await response.json();
             if (!response.ok || result.success === false) {
                 throw new Error(result.message || 'Không thể tải các đợt đã đăng ký.');

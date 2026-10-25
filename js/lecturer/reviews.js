@@ -75,7 +75,7 @@ document.addEventListener('DOMContentLoaded', () => {
         area.innerHTML = `<div style="${card} color:#64748b;">Đang tải...</div>`;
         const [pRes, tRes] = await Promise.all([
             callAPI('/registration-periods', { method: 'GET' }),
-            callAPI('/reviewers/my-tasks', { method: 'GET' })
+            callAPI('/reviewers/my-tasks', { method: 'GET', pagination: { target: 'reviewsArea', reload: load } })
         ]);
         periodsById = {};
         if (pRes.ok && Array.isArray(pRes.result.data)) pRes.result.data.forEach(p => { periodsById[p.id] = p; });

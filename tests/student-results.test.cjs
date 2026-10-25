@@ -35,6 +35,8 @@ function setup(periods = [{ id: 10, name: 'Đợt đã đăng ký' }], handler) 
                 data: url === '/results/student/periods' ? periods : [] }) };
         }
     };
+    context.apiFetchAll = context.apiFetch;
+    context.apiFetchTable = context.apiFetch;
     vm.runInNewContext(source, context);
     return { elements, requests, ready: () => ready() };
 }

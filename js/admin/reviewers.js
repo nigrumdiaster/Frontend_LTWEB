@@ -100,7 +100,7 @@ function setupSingleSelectDropdown({ containerId, triggerId, dropdownId, searchI
 
 async function loadRegistrationPeriods() {
     try {
-        const response = await apiFetch(`/registration-periods`, {
+        const response = await apiFetchAll(`/registration-periods`, {
             method: 'GET',
             headers: getAuthHeaders()
         });
@@ -213,6 +213,7 @@ function selectAssignReviewer(id) {
 async function loadReviewerAssignments() {
     const periodId = document.getElementById('filterPeriodId')?.value || selectedFilterPeriodId;
     if (!periodId) {
+        hideServerPagination('reviewerTableBody');
         showReviewerTableMessage('Vui lòng chọn đợt đăng ký.');
         return;
     }
@@ -220,27 +221,19 @@ async function loadReviewerAssignments() {
     showReviewerTableMessage('Đang tải danh sách phân công...');
 
     try {
-        const [assignmentsResponse, topicsResponse] = await Promise.all([
-            apiFetch(`/reviewers/period/${encodeURIComponent(periodId)}`, {
-                method: 'GET',
-                headers: getAuthHeaders()
-            }),
-            apiFetch(`/topics?periodId=${encodeURIComponent(periodId)}&approvalStatus=APPROVED`, {
-                method: 'GET',
-                headers: getAuthHeaders()
-            })
-        ]);
-        const result = await assignmentsResponse.json();
+        const topicsResponse = await apiFetchTable(`/topics?periodId=${encodeURIComponent(periodId)}&status=APPROVED`,
+            { method: 'GET', headers: getAuthHeaders() }, 'reviewerTableBody', loadReviewerAssignments);
         const topicsResult = await topicsResponse.json();
-
-        if (!assignmentsResponse.ok || !result.success) {
-            throw new Error(result.message || 'Không thể tải danh sách phân công.');
+        if (!topicsResponse.ok || !topicsResult.success) throw new Error(topicsResult.message || 'Cannot load topics');
+        const topicIds = (topicsResult.data || []).map(topic => topic.id);
+        let assignmentData = [];
+        if (topicIds.length) {
+            const response = await apiFetchAll(`/reviewers/period/${encodeURIComponent(periodId)}?topicIds=${topicIds.join(',')}`, { headers: getAuthHeaders() });
+            const payload = await response.json();
+            if (!response.ok || !payload.success) throw new Error(payload.message || 'Cannot load reviewer assignments');
+            assignmentData = payload.data || [];
         }
-        if (!topicsResponse.ok || !topicsResult.success) {
-            throw new Error(topicsResult.message || 'Không thể tải danh sách đề tài đã duyệt.');
-        }
-
-        const assignmentsByTopicId = new Map((result.data || []).map(assignment => [Number(assignment.topicId), assignment]));
+        const assignmentsByTopicId = new Map(assignmentData.map(assignment => [Number(assignment.topicId), assignment]));
         const approvedTopics = (topicsResult.data || []).filter(topic =>
             (topic.approvalStatus || topic.status) === 'APPROVED'
         );
@@ -301,15 +294,15 @@ function renderReviewerAssignments(topics) {
 async function openAssignReviewerModal(periodId, topicId) {
     try {
         const [assignmentsResponse, topicsResponse, usersResponse] = await Promise.all([
-            apiFetch(`/reviewers/period/${encodeURIComponent(periodId)}`, {
+            apiFetchAll(`/reviewers/period/${encodeURIComponent(periodId)}`, {
                 method: 'GET',
                 headers: getAuthHeaders()
             }),
-            apiFetch(`/topics?periodId=${encodeURIComponent(periodId)}&approvalStatus=APPROVED`, {
+            apiFetchAll(`/topics?periodId=${encodeURIComponent(periodId)}&status=APPROVED`, {
                 method: 'GET',
                 headers: getAuthHeaders()
             }),
-            apiFetch(`/users`, {
+            apiFetchAll(`/users`, {
                 method: 'GET',
                 headers: getAuthHeaders()
             })

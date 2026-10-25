@@ -142,7 +142,7 @@ async function populateSelectOptions(selectIds, endpoint, placeholders, getLabel
     if (selects.length === 0) return;
 
     try {
-        const response = await apiFetch(endpoint, { method: 'GET' });
+        const response = await apiFetchAll(endpoint, { method: 'GET' });
         const result = await response.json();
         if (!response.ok || !result.success || !Array.isArray(result.data)) {
             throw new Error(result.message || `Không thể tải dữ liệu từ ${endpoint}.`);
@@ -451,29 +451,23 @@ async function loadTopics() {
     const keyword = document.getElementById('filterKeyword')?.value.trim() || '';
 
     let queryParams = new URLSearchParams();
+    if (keyword) queryParams.set('keyword', keyword);
     if (periodId) queryParams.append('periodId', periodId);
     if (departmentId) queryParams.append('departmentId', departmentId);
-    if (status) queryParams.append('approvalStatus', status);
+    if (status) queryParams.append('status', status);
 
     try {
-        const response = await apiFetch(`/topics?${queryParams.toString()}`, {
+        const response = await apiFetchTable(`/topics?${queryParams.toString()}`, {
             method: 'GET',
             headers: {
                 'Authorization': `Bearer ${getToken()}`,
                 'Content-Type': 'application/json'
             }
-        });
+        }, 'topicTableBody', loadTopics);
 
         const result = await response.json();
         if (response.ok && result.success) {
             let topics = Array.isArray(result.data) ? result.data : [];
-            if (status) {
-                topics = topics.filter(t => (t.approvalStatus || t.status) === status);
-            }
-            const query = removeVietnameseTones(keyword);
-            topics = topics.filter(topic => !query ||
-                [topic.code, topic.titleVi, topic.titleEn, topic.primaryAdvisorName]
-                    .some(value => removeVietnameseTones(value).includes(query)));
             renderTopicsTable(topics);
         } else {
             showTableMessage(`❌ Lỗi: ${result.message || 'Không thể tải danh sách'}`);

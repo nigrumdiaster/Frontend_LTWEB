@@ -74,7 +74,7 @@ function setupPeriodSearchableSelect() {
 
 async function loadRegistrationPeriods() {
     try {
-        const response = await apiFetch(`/registration-periods`, {
+        const response = await apiFetchAll(`/registration-periods`, {
             method: 'GET',
             headers: getAuthHeaders()
         });
@@ -156,16 +156,17 @@ window.selectPeriod = selectPeriod;
 async function loadPeriodResults() {
     const periodId = document.getElementById('filterPeriod').value;
     if (!periodId) {
+        hideServerPagination('resultsTableBody');
         showResultsMessage('Vui lòng chọn đợt đăng ký.');
         return;
     }
 
     showResultsMessage('Đang tải kết quả...');
     try {
-        const response = await apiFetch(`/results/period/${encodeURIComponent(periodId)}`, {
+        const response = await apiFetchTable(`/results/period/${encodeURIComponent(periodId)}`, {
             method: 'GET',
             headers: getAuthHeaders()
-        });
+        }, 'resultsTableBody', loadPeriodResults);
         const result = await response.json();
         if (!response.ok || !result.success) {
             throw new Error(result.message || 'Không thể tải kết quả của đợt.');
@@ -223,6 +224,7 @@ function showResultsMessage(message, isError = false) {
 async function publishPeriodResults() {
     const periodId = document.getElementById('filterPeriod').value;
     if (!periodId) {
+        hideServerPagination('resultsTableBody');
         await showAlert('Vui lòng chọn đợt đăng ký cần công bố.');
         return;
     }

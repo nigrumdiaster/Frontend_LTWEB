@@ -40,7 +40,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
 async function loadDepartmentOptions() {
     try {
-        const response = await apiFetch('/departments', {
+        const response = await apiFetchAll('/departments', {
             method: 'GET',
             headers: getAuthHeaders()
         });
@@ -90,14 +90,15 @@ async function loadUsers() {
     const keyword = document.getElementById('filterKeyword')?.value || '';
     const queryParams = new URLSearchParams();
 
+    if (keyword) queryParams.set('keyword', keyword);
     if (role) queryParams.append('role', role);
     if (departmentId) queryParams.append('departmentId', departmentId);
 
     try {
-        const response = await apiFetch(`/users?${queryParams.toString()}`, {
+        const response = await apiFetchTable(`/users?${queryParams.toString()}`, {
             method: 'GET',
             headers: getAuthHeaders()
-        });
+        }, 'userTableBody', loadUsers);
 
         if (response.status === 401 || response.status === 403) {
             showTableMessage('🔒 Không có quyền truy cập hoặc Token hết hạn. Vui lòng <a href="../index.html" style="color: var(--primary); font-weight: 600;">Đăng nhập lại</a>.');
@@ -109,14 +110,11 @@ async function loadUsers() {
             const users = Array.isArray(result.data) ? result.data : [];
             populateFilterOptions(
                 document.getElementById('filterRole'),
-                users.map(user => user.role),
+                ['ROLE_ADMIN', 'ROLE_DEAN', 'ROLE_DEPARTMENT_HEAD', 'ROLE_LECTURER', 'ROLE_STUDENT'],
                 'Tất cả vai trò',
                 formatRoleName
             );
-            const query = removeVietnameseTones(keyword);
-            renderUserTable(users.filter(user => !query ||
-                [user.fullName, user.username, user.email, user.code]
-                    .some(value => removeVietnameseTones(value).includes(query))));
+            renderUserTable(users);
         } else {
             showTableMessage(`❌ Lỗi: ${escapeText(result.message || 'Không thể tải danh sách người dùng')}`);
         }
@@ -177,10 +175,10 @@ async function loadLecturersByDept() {
     }
 
     try {
-        const response = await apiFetch(`/users/lecturers/department/${departmentId}`, {
+        const response = await apiFetchTable(`/users/lecturers/department/${departmentId}`, {
             method: 'GET',
             headers: getAuthHeaders()
-        });
+        }, 'userTableBody', loadLecturersByDept);
         const result = await response.json();
 
         if (response.ok && result.success) {

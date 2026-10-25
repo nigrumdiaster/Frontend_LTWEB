@@ -89,22 +89,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function render() {
-        const kw = (typeof removeVietnameseTones === 'function')
-            ? removeVietnameseTones(searchInput?.value || '')
-            : removeVietnameseTones(searchInput?.value);
-        const selectedDept = deptFilter?.value || '';
-
-        const list = topicsCache.filter(t => {
-            const matchDept = !selectedDept || String(t.departmentId) === String(selectedDept);
-            const matchKw = !kw || [t.code, t.titleVi, t.titleEn, t.primaryAdvisorName, t.coAdvisorName, t.departmentName]
-                .some(v => {
-                    const str = (typeof removeVietnameseTones === 'function')
-                        ? removeVietnameseTones(v || '')
-                        : String(v || '').toLowerCase();
-                    return str.includes(kw);
-                });
-            return matchDept && matchKw;
-        });
+        const list = topicsCache;
 
         if (tbody) {
             tbody.innerHTML = list.length ? list.map((t, i) => `
@@ -125,7 +110,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         if (countEl) {
-            countEl.textContent = `Hiển thị ${list.length} / ${topicsCache.length} đề tài đã công bố`;
+            countEl.textContent = `Hiển thị ${list.length} / ${getServerPagination(tbody)?.totalElements ?? topicsCache.length} đề tài đã công bố`;
         }
     }
 
@@ -139,11 +124,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
         let params = new URLSearchParams();
         params.append('status', 'APPROVED');
+        if (searchInput.value.trim()) params.set('keyword', searchInput.value.trim());
         if (periodId) params.append('periodId', periodId);
         if (deptId) params.append('departmentId', deptId);
 
         try {
-            const response = await apiFetch(`/topics?${params.toString()}`);
+            const response = await apiFetchTable(`/topics?${params.toString()}`, {}, 'topicTableBody', loadTopics);
             const result = await response.json();
             if (!response.ok) throw new Error(result.message || 'Không thể tải danh sách đề tài.');
             topicsCache = Array.isArray(result.data) ? result.data : [];
@@ -161,7 +147,7 @@ document.addEventListener('DOMContentLoaded', () => {
     async function loadPeriods() {
         if (!periodFilter) return;
         try {
-            const response = await apiFetch('/registration-periods');
+            const response = await apiFetchAll('/registration-periods');
             const result = await response.json();
             if (response.ok && Array.isArray(result.data)) {
                 result.data.filter(p => p.status !== 'DRAFT').forEach(p => {
@@ -176,7 +162,7 @@ document.addEventListener('DOMContentLoaded', () => {
     async function loadDepartments() {
         if (!deptFilter) return;
         try {
-            const response = await apiFetch('/departments');
+            const response = await apiFetchAll('/departments');
             const result = await response.json();
             if (response.ok && Array.isArray(result.data)) {
                 result.data.forEach(d => {
@@ -191,8 +177,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const btnReload = document.getElementById('btnReloadTopics');
     if (btnReload) btnReload.addEventListener('click', loadTopics);
     if (periodFilter) periodFilter.addEventListener('change', loadTopics);
-    if (deptFilter) deptFilter.addEventListener('change', render);
-    if (searchInput) searchInput.addEventListener('input', render);
+    if (deptFilter) deptFilter.addEventListener('change', loadTopics);
+    if (searchInput) searchInput.addEventListener('input', debounce(loadTopics));
 
     Promise.all([loadPeriods(), loadDepartments()])
         .then(loadTopics)

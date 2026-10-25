@@ -59,26 +59,26 @@ async function loadRegistrationPeriods() {
     if (status) queryParams.append('status', status);
 
     try {
-        const response = await apiFetch(`/registration-periods?${queryParams.toString()}`, {
+        const response = await apiFetchTable(`/registration-periods?${queryParams.toString()}`, {
             method: 'GET',
             headers: {
                 'Authorization': `Bearer ${getToken()}`,
                 'Content-Type': 'application/json'
             }
-        });
+        }, 'periodTableBody', loadRegistrationPeriods);
 
         const result = await response.json();
         if (response.ok && result.success) {
             const periods = Array.isArray(result.data) ? result.data : [];
             populateFilterOptions(
                 document.getElementById('filterType'),
-                periods.map(period => period.type),
+                ['COURSE_PROJECT','SCIENTIFIC_RESEARCH','SPECIALIZED_PROJECT','GRADUATION_THESIS'],
                 'Tất cả loại đợt',
                 formatType
             );
             populateFilterOptions(
                 document.getElementById('filterStatus'),
-                periods.map(period => period.status),
+                ['DRAFT','PHASE1_LECTURER_REGISTRATION','PHASE1_REVIEWING','PHASE2_STUDENT_REGISTRATION','IN_PROGRESS','REVIEWING','DEFENSE','COMPLETED','CANCELLED'],
                 'Tất cả trạng thái',
                 status => status.replace(/_/g, ' ')
             );

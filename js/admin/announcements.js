@@ -18,8 +18,9 @@ function getAuthHeaders() {
     };
 }
 
-async function requestAnnouncementApi(path, options = {}) {
-    const response = await apiFetch(`${path}`, {
+async function requestAnnouncementApi(path, options = {}, pagination = null) {
+    const request = pagination ? (url, opts) => apiFetchTable(url, opts, pagination.target, pagination.reload) : apiFetchAll;
+    const response = await request(`${path}`, {
         ...options,
         headers: { ...getAuthHeaders(), ...(options.headers || {}) }
     });
@@ -34,16 +35,15 @@ async function loadAnnouncements() {
     const params = new URLSearchParams();
     const targetRole = document.getElementById('filterTargetRole').value;
     const title = document.getElementById('searchTitle').value.trim();
+    if (title) params.set('keyword', title);
     if (targetRole && targetRole !== 'ALL') params.set('targetRole', targetRole);
 
     setAnnouncementTableMessage('Đang tải danh sách thông báo...');
     try {
         const query = params.toString();
-        const result = await requestAnnouncementApi(`/api/announcements${query ? `?${query}` : ''}`);
+        const result = await requestAnnouncementApi(`/api/announcements${query ? `?${query}` : ''}`, {}, { target: 'announcementsTableBody', reload: loadAnnouncements });
         const announcements = Array.isArray(result.data) ? result.data : [];
-        const queryText = removeVietnameseTones(title);
-        renderAnnouncements(announcements.filter(announcement => !queryText ||
-            removeVietnameseTones(announcement.title).includes(queryText)));
+        renderAnnouncements(announcements);
     } catch (error) {
         console.error('Lỗi tải thông báo:', error);
         setAnnouncementTableMessage(error.message || 'Không thể tải danh sách thông báo.', true);

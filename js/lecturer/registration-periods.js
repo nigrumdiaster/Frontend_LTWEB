@@ -124,9 +124,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     function render() {
-        const kw = removeVietnameseTones(searchInput.value);
-        const list = periodsCache.filter(p =>
-            !kw || [p.name, p.semester, p.academicYear].some(v => removeVietnameseTones(v).includes(kw)));
+        const list = periodsCache;
 
         tbody.innerHTML = list.length ? list.map((p, i) => `
             <tr style="border-top: 1px solid #e2e8f0;">
@@ -149,30 +147,29 @@ document.addEventListener('DOMContentLoaded', async () => {
         showError('');
         tbody.innerHTML = '<tr><td colspan="100%" class="text-center py-4">Đang tải dữ liệu...</td></tr>';
 
-        const params = new URLSearchParams();
+        const params = new URLSearchParams({ excludeDraft: 'true', keyword: searchInput.value.trim() });
         if (typeFilter.value) params.set('type', typeFilter.value);
         if (statusFilter.value) params.set('status', statusFilter.value);
         const query = params.toString() ? '?' + params.toString() : '';
 
         try {
-            const response = await apiFetch('/registration-periods' + query, {
+            const response = await apiFetchTable('/registration-periods' + query, {
                 method: 'GET',
                 headers: { 'Content-Type': 'application/json' }
-            });
+            }, 'periodTableBody', loadPeriods);
             const result = await response.json();
             if (response.ok && result.success) {
                 // Sinh viên không cần thấy đợt còn ở trạng thái nháp
-                periodsCache = (Array.isArray(result.data) ? result.data : [])
-                    .filter(p => p.status !== 'DRAFT');
+                periodsCache = Array.isArray(result.data) ? result.data : [];
                 populateFilterOptions(
                     typeFilter,
-                    periodsCache.map(period => period.type),
+                    Object.keys(PERIOD_TYPE_LABELS),
                     'Tất cả',
                     type => PERIOD_TYPE_LABELS[type] || type
                 );
                 populateFilterOptions(
                     statusFilter,
-                    periodsCache.map(period => period.status),
+                    Object.keys(PERIOD_STATUS_LABELS).filter(status => status !== 'DRAFT'),
                     'Tất cả',
                     status => (PERIOD_STATUS_LABELS[status] || [status])[0]
                 );
@@ -192,6 +189,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     document.getElementById('btnReloadPeriods').addEventListener('click', loadPeriods);
     typeFilter.addEventListener('change', loadPeriods);
     statusFilter.addEventListener('change', loadPeriods);
-    searchInput.addEventListener('input', render);
+    searchInput.addEventListener('input', debounce(loadPeriods));
     loadPeriods();
 });

@@ -20,6 +20,7 @@ function logout() {
     window.location.href = isInPortalFolder() ? '../index.html' : 'index.html';
 }
 
+// One HTTP request. List callers use the DB default (10) unless specified.
 async function apiFetch(endpoint, options = {}) {
     const normalizedEndpoint = endpoint.startsWith('/api/')
         ? endpoint.slice(4)
@@ -49,6 +50,166 @@ async function apiFetch(endpoint, options = {}) {
     }
 
     return response;
+}
+
+// Explicit opt-in for selectors and lookup data that require a complete list.
+async function apiFetchAll(endpoint, options = {}) {
+    const response = await apiFetch(endpoint, options);
+    if ((options.method || 'GET').toUpperCase() !== 'GET' || !response.ok) return response;
+
+    const separator = endpoint.indexOf('?');
+    const pathname = separator < 0 ? endpoint : endpoint.slice(0, separator);
+    const query = new URLSearchParams(separator < 0 ? '' : endpoint.slice(separator + 1));
+    if (query.has('page') || query.get('limit') === '-1') return response;
+
+    let payload;
+    try {
+        payload = await response.clone().json();
+    } catch {
+        return response;
+    }
+    if (payload?.success === false || !Array.isArray(payload?.data) || !payload.pagination?.hasNext) return response;
+
+    const all = [...payload.data];
+    let pagination = payload.pagination;
+    let loadedPages = 1;
+    while (pagination.hasNext) {
+        if (!Number.isInteger(pagination.page) || !Number.isInteger(pagination.size)
+                || pagination.page < 0 || pagination.size < 1) {
+            throw new Error('Thông tin phân trang không hợp lệ. Vui lòng tải lại danh sách.');
+        }
+        const nextPage = pagination.page + 1;
+        query.set('page', String(nextPage));
+        query.set('limit', String(pagination.size));
+        const nextResponse = await apiFetch(`${pathname}?${query.toString()}`, options);
+        // Never present an incomplete array as a successful complete result.
+        if (!nextResponse.ok) return nextResponse;
+        const next = await nextResponse.json();
+        if (next?.success === false || !Array.isArray(next?.data)
+                || typeof next.pagination?.hasNext !== 'boolean'
+                || next.pagination?.page !== nextPage || (next.pagination.hasNext && !next.data.length)) {
+            throw new Error(next.message || 'Không tải đủ các trang dữ liệu. Vui lòng thử lại.');
+        }
+        all.push(...next.data);
+        pagination = next.pagination;
+        loadedPages++;
+    }
+    const headers = new Headers(response.headers);
+    headers.set('Content-Type', 'application/json; charset=UTF-8');
+    headers.delete('Content-Length');
+    headers.delete('Content-Encoding');
+    return new Response(JSON.stringify({ ...payload, data: all,
+        pagination: { ...pagination, loadedPages, allPagesLoaded: true }
+    }), { status: response.status, statusText: response.statusText, headers });
+}
+
+const serverPaginationStates = new WeakMap();
+
+function getServerPagination(target) { return serverPaginationStates.get(target); }
+
+function hideServerPagination(targetId) {
+    const target = document.getElementById(targetId);
+    const state = target && serverPaginationStates.get(target);
+    if (state) { state.controls.hidden = true; state.page = 0; state.key = ''; }
+}
+
+// Tables and card lists fetch only the selected server page; filter changes reset page 0.
+async function apiFetchTable(endpoint, options, targetId, reload) {
+    const target = document.getElementById(targetId);
+    if (!target) throw new Error('Không tìm thấy vùng hiển thị danh sách.');
+    const anchor = target.closest('table') || target;
+    if (anchor.tagName === 'TABLE') anchor.dataset.serverPagination = 'true';
+    let state = serverPaginationStates.get(target);
+    if (!state) {
+        const controls = document.createElement('div');
+        controls.className = 'table-pagination';
+        controls.setAttribute('role', 'group');
+        controls.setAttribute('aria-label', 'Phân trang từ máy chủ');
+        anchor.after(controls);
+        state = { page: 0, limit: 10, key: '', totalElements: 0, totalPages: 0, busy: false, controls };
+        serverPaginationStates.set(target, state);
+    }
+    if (state.key !== endpoint) { state.page = 0; state.key = endpoint; }
+    state.reload = reload;
+
+    const draw = () => {
+        const controls = state.controls;
+        controls.replaceChildren();
+        controls.hidden = state.totalPages < 1;
+        const summary = document.createElement('span');
+        summary.className = 'table-pagination-summary';
+        summary.setAttribute('aria-live', 'polite');
+        summary.textContent = `${state.totalElements} dòng · Trang ${state.page + 1}/${Math.max(1, state.totalPages)}`;
+        controls.append(summary);
+        const navigation = document.createElement('nav');
+        navigation.className = 'table-pagination-pages';
+        navigation.setAttribute('aria-label', 'Chọn trang của danh sách');
+        controls.append(navigation);
+        const button = (label, page, disabled, current = false) => {
+            const element = document.createElement('button');
+            element.type = 'button';
+            element.className = 'table-pagination-button';
+            element.textContent = label;
+            element.disabled = state.busy || disabled;
+            if (current) element.setAttribute('aria-current', 'page');
+            element.addEventListener('click', async () => {
+                if (state.busy) return;
+                state.page = page;
+                await state.reload();
+                controls.querySelector('[aria-current="page"]')?.focus();
+            });
+            navigation.append(element);
+        };
+        button('Trước', state.page - 1, state.page === 0);
+        const first = Math.max(0, Math.min(state.page - 2, state.totalPages - 5));
+        for (let page = first; page < Math.min(state.totalPages, first + 5); page++) {
+            button(String(page + 1), page, false, page === state.page);
+        }
+        button('Sau', state.page + 1, state.page + 1 >= state.totalPages);
+    };
+
+    const version = (state.version || 0) + 1;
+    state.version = version;
+    state.busy = true;
+    draw();
+    const separator = endpoint.indexOf('?');
+    const path = separator < 0 ? endpoint : endpoint.slice(0, separator);
+    const query = new URLSearchParams(separator < 0 ? '' : endpoint.slice(separator + 1));
+    query.set('page', String(state.page));
+    query.set('limit', '10');
+    try {
+        state.active = apiFetch(`${path}?${query}`, options).then(async response => ({
+            response, result: await response.clone().json()
+        }));
+        const { response, result } = await state.active;
+        if (state.version !== version) {
+            const latest = await state.active;
+            return new Response(JSON.stringify(latest.result), {
+                status: latest.response.status, headers: { 'Content-Type': 'application/json' }
+            });
+        }
+        if (response.ok && result.success !== false && result.pagination) {
+            state.totalElements = result.pagination.totalElements;
+            state.totalPages = result.pagination.totalPages;
+            if (state.totalPages > 0 && state.page >= state.totalPages) {
+                state.page = state.totalPages - 1;
+                return await apiFetchTable(endpoint, options, targetId, reload);
+            }
+        } else {
+            state.totalPages = 0;
+        }
+        return response;
+    } catch (error) {
+        if (state.version === version) state.totalPages = 0;
+        throw error;
+    } finally {
+        if (state.version === version) { state.busy = false; draw(); }
+    }
+}
+
+function debounce(callback, delay = 250) {
+    let timer;
+    return (...args) => { clearTimeout(timer); timer = setTimeout(() => callback(...args), delay); };
 }
 
 function populateFilterOptions(select, values, placeholder, formatLabel = value => value, defaultValue = '') {

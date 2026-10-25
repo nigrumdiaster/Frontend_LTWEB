@@ -22,12 +22,6 @@ function isPinned(a) { return (a.isPinned ?? a.pinned) === true; }
 
 // Hiện cho giảng viên nếu thông báo dành cho tất cả / giảng viên, hoặc không ghi rõ đối tượng.
 // Chỉ ẩn khi rõ ràng là dành riêng cho sinh viên.
-function visibleToStudent(a) {
-    const r = String(a.targetRole || '');
-    if (!r) return true;
-    if (/ALL|LECTURER/i.test(r)) return true;
-    return !/STUDENT/i.test(r);
-}
 
 function targetLabel(a) {
     const r = String(a.targetRole || '');
@@ -98,10 +92,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     function render() {
-        const kw = removeVietnameseTones(searchInput.value);
-        const list = announcementsCache
-            .filter(a => !kw || [a.title, a.content, a.authorName].some(v => removeVietnameseTones(v).includes(kw)))
-            .sort((x, y) => (isPinned(y) - isPinned(x)) || (new Date(y.createdAt) - new Date(x.createdAt)));
+        const list = announcementsCache;
 
         if (!list.length) {
             area.innerHTML = `
@@ -129,13 +120,13 @@ document.addEventListener('DOMContentLoaded', async () => {
         showError('');
         area.innerHTML = '<div style="background:white; border-radius:12px; padding:24px; border:1px solid #e2e8f0; color:#64748b;">Đang tải...</div>';
         try {
-            const response = await apiFetch('/announcements', {
+            const response = await apiFetchTable('/announcements?keyword=' + encodeURIComponent(searchInput.value.trim()), {
                 method: 'GET',
                 headers: { 'Content-Type': 'application/json' }
-            });
+            }, 'annArea', loadAnnouncements);
             const result = await response.json();
             if (response.ok && result.success) {
-                announcementsCache = (Array.isArray(result.data) ? result.data : []).filter(visibleToStudent);
+                announcementsCache = (Array.isArray(result.data) ? result.data : []);
                 render();
             } else {
                 throw new Error(result.message || 'Không thể tải danh sách thông báo.');
@@ -149,6 +140,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     document.getElementById('btnReloadAnn').addEventListener('click', loadAnnouncements);
-    searchInput.addEventListener('input', render);
+    searchInput.addEventListener('input', debounce(loadAnnouncements));
     loadAnnouncements();
 });

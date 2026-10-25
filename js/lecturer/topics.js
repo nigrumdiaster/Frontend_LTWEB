@@ -88,12 +88,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function render() {
-        const kw = removeVietnameseTones(searchInput.value);
-        const list = topicsCache.filter(t =>
-            (!onlyMine.checked || isMyTopic(t)) &&
-            (!approvalFilter.value || t.approvalStatus === approvalFilter.value) &&
-            (!kw || [t.code, t.titleVi, t.titleEn, t.primaryAdvisorName, t.coAdvisorName]
-                .some(v => removeVietnameseTones(v).includes(kw))));
+        const list = topicsCache;
 
         tbody.innerHTML = list.length ? list.map((t, i) => `
             <tr style="border-top: 1px solid #e2e8f0;">
@@ -111,20 +106,24 @@ document.addEventListener('DOMContentLoaded', () => {
                 </td>
             </tr>`).join('')
             : '<tr><td colspan="100%" class="text-center py-4">Chưa có dữ liệu</td></tr>';
-        countEl.textContent = `Hiển thị ${list.length} / ${topicsCache.length} đề tài`;
+        countEl.textContent = `Hiển thị ${list.length} / ${getServerPagination(tbody)?.totalElements ?? topicsCache.length} đề tài`;
         updateApprovalNotice();
     }
 
     async function loadTopics() {
         showError('');
         tbody.innerHTML = '<tr><td colspan="100%" class="text-center py-4">Đang tải dữ liệu...</td></tr>';
-        const query = periodFilter.value ? '?periodId=' + encodeURIComponent(periodFilter.value) : '';
-        const { ok, result } = await callAPI('/topics' + query, { method: 'GET' });
+        const params = new URLSearchParams({ keyword: searchInput.value.trim() });
+        if (periodFilter.value) params.set('periodId', periodFilter.value);
+        if (approvalFilter.value) params.set('status', approvalFilter.value);
+        if (onlyMine.checked && getMe()) params.set('advisorId', getMe().id);
+        const query = '?' + params;
+        const { ok, result } = await callAPI('/topics' + query, { method: 'GET', pagination: { target: 'topicTableBody', reload: loadTopics } });
         if (ok) {
             topicsCache = Array.isArray(result.data) ? result.data : [];
             populateFilterOptions(
                 approvalFilter,
-                topicsCache.map(topic => topic.approvalStatus || topic.status),
+                ['PENDING','APPROVED','REJECTED'],
                 'Tất cả',
                 status => ({ PENDING: 'Chờ duyệt', APPROVED: 'Đã duyệt', REJECTED: 'Bị từ chối' }[status] || status)
             );
@@ -147,9 +146,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
     document.getElementById('btnReloadTopics').addEventListener('click', loadTopics);
     periodFilter.addEventListener('change', loadTopics);
-    approvalFilter.addEventListener('change', render);
-    onlyMine.addEventListener('change', render);
-    searchInput.addEventListener('input', render);
+    approvalFilter.addEventListener('change', loadTopics);
+    onlyMine.addEventListener('change', loadTopics);
+    searchInput.addEventListener('input', debounce(loadTopics));
 
     Promise.all([loadPeriods(), loadHeadDepartments()]).then(loadTopics).catch(error => {
         console.error('Lỗi tải bộ lọc đề tài:', error);

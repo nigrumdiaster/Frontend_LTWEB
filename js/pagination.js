@@ -3,6 +3,7 @@
     const paginatedBodies = new WeakSet();
 
     function paginateTable(table) {
+        if (table.dataset?.serverPagination === 'true') return;
         const body = table.tBodies[0];
         if (!body || paginatedBodies.has(body)) return;
         paginatedBodies.add(body);
@@ -49,6 +50,11 @@
         }
 
         function render() {
+            if (table.dataset?.serverPagination === 'true') {
+                controls.hidden = true;
+                [...body.rows].forEach(row => { row.hidden = false; });
+                return;
+            }
             const rows = [...body.rows];
             // Loading, error and empty states use a single cell spanning the table.
             const dataRows = rows.filter(row => !(row.cells.length === 1 && row.cells[0].colSpan > 1));

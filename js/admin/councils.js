@@ -147,8 +147,8 @@ function setupSingleSearchableSelect({ triggerId, dropdownId, searchInputId, ign
 async function loadPageData() {
     try {
         const [periodsResponse, usersResponse] = await Promise.all([
-            apiFetch(`/registration-periods`, { headers: getAuthHeaders() }),
-            apiFetch(`/users`, { headers: getAuthHeaders() })
+            apiFetchAll(`/registration-periods`, { headers: getAuthHeaders() }),
+            apiFetchAll(`/users`, { headers: getAuthHeaders() })
         ]);
         const [periodsResult, usersResult] = await Promise.all([periodsResponse.json(), usersResponse.json()]);
 
@@ -538,16 +538,17 @@ function syncHiddenMemberInputs() {
 async function loadCouncils() {
     const periodId = document.getElementById('filterPeriodId')?.value || selectedFilterPeriodId;
     if (!periodId) {
+        hideServerPagination('councilTableBody');
         showCouncilMessage('Vui lòng chọn đợt đăng ký.');
         return;
     }
 
     showCouncilMessage('Đang tải danh sách hội đồng...');
     try {
-        const response = await apiFetch(`/councils/period/${encodeURIComponent(periodId)}`, {
+        const response = await apiFetchTable(`/councils/period/${encodeURIComponent(periodId)}`, {
             method: 'GET',
             headers: getAuthHeaders()
-        });
+        }, 'councilTableBody', loadCouncils);
         const result = await response.json();
         if (!response.ok || !result.success) {
             throw new Error(result.message || 'Không thể tải danh sách hội đồng.');
@@ -631,6 +632,7 @@ async function createCouncil(event) {
     const memberIds = [...selectedMemberIds];
 
     if (!periodId) {
+        hideServerPagination('councilTableBody');
         await showAlert('Vui lòng chọn đợt đăng ký.');
         return;
     }
@@ -756,7 +758,7 @@ async function openAssignTopicsModal(councilId) {
         }
 
         const council = result.data;
-        const topicsResponse = await apiFetch(`/topics?periodId=${encodeURIComponent(council.periodId)}`, {
+        const topicsResponse = await apiFetchAll(`/topics?periodId=${encodeURIComponent(council.periodId)}`, {
             method: 'GET',
             headers: getAuthHeaders()
         });

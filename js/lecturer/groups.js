@@ -33,14 +33,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function render() {
-        const kw = removeVietnameseTones(searchInput.value);
-        const list = groupsCache.filter(g => {
-            if (onlyMine.checked && !isMyGroup(g)) return false;
-            if (!kw) return true;
-            const text = removeVietnameseTones([g.name, g.code, g.topicTitleVi, g.leaderName]
-                .concat((g.members || []).map(m => m.studentName + ' ' + m.studentCode)).join(' '));
-            return text.includes(kw);
-        });
+        const list = groupsCache;
 
         if (!list.length) {
             area.innerHTML = `<div style="${card} color:#64748b;">Không có nhóm nào.</div>`;
@@ -91,12 +84,13 @@ document.addEventListener('DOMContentLoaded', () => {
         showError('');
         const periodId = periodSelect.value;
         if (!periodId) {
+        hideServerPagination('groupArea');
             groupsCache = [];
             area.textContent = 'Vui lòng chọn đợt đăng ký.';
             return;
         }
         area.innerHTML = `<div style="${card} color:#64748b;">Đang tải...</div>`;
-        const { ok, result } = await callAPI('/groups?periodId=' + encodeURIComponent(periodId), { method: 'GET' });
+        const { ok, result } = await callAPI('/groups?periodId=' + encodeURIComponent(periodId) + '&keyword=' + encodeURIComponent(searchInput.value.trim()) + (onlyMine.checked && getMe() ? '&advisorId=' + getMe().id : ''), { method: 'GET', pagination: { target: 'groupArea', reload: loadGroups } });
         if (ok) {
             groupsCache = Array.isArray(result.data) ? result.data : [];
             render();
@@ -124,8 +118,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     document.getElementById('btnReloadGroups').addEventListener('click', loadGroups);
     periodSelect.addEventListener('change', loadGroups);
-    onlyMine.addEventListener('change', render);
-    searchInput.addEventListener('input', render);
+    onlyMine.addEventListener('change', loadGroups);
+    searchInput.addEventListener('input', debounce(loadGroups));
 
     loadPeriods().catch(error => {
         console.error('Lỗi tải danh sách đợt:', error);

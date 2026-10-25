@@ -29,7 +29,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function render() {
-        const list = councils.filter(c => !onlyMine.checked || myMembership(c));
+        const list = councils;
         if (!list.length) {
             area.innerHTML = `<div style="${card} color:#64748b;">${councils.length ? 'Bạn không thuộc hội đồng nào trong đợt này.' : 'Đợt này chưa có hội đồng nào.'}</div>`;
             return;
@@ -141,12 +141,15 @@ document.addEventListener('DOMContentLoaded', () => {
         showError('');
         const periodId = periodSelect.value;
         if (!periodId) {
+            hideServerPagination('councilsArea');
             councils = [];
             area.textContent = 'Vui lòng chọn đợt đăng ký.';
             return;
         }
         area.innerHTML = `<div style="${card} color:#64748b;">Đang tải...</div>`;
-        const { ok, result } = await callAPI('/councils/period/' + encodeURIComponent(periodId), { method: 'GET' });
+        const { ok, result } = await callAPI('/councils/period/' + encodeURIComponent(periodId)
+            + (onlyMine.checked && me ? '?lecturerId=' + encodeURIComponent(me.id) : ''),
+            { method: 'GET', pagination: { target: 'councilsArea', reload: loadCouncils } });
         if (ok) {
             councils = Array.isArray(result.data) ? result.data : [];
             render();
@@ -174,7 +177,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     document.getElementById('btnReloadCouncils').addEventListener('click', loadCouncils);
     periodSelect.addEventListener('change', loadCouncils);
-    onlyMine.addEventListener('change', render);
+    onlyMine.addEventListener('change', loadCouncils);
     loadPeriods().catch(error => {
         console.error('Lỗi tải danh sách đợt:', error);
         showError(error.message || 'Không thể tải danh sách đợt đăng ký.');

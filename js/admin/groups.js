@@ -98,7 +98,7 @@ function setupSingleSelectDropdown({ containerId, triggerId, dropdownId, searchI
 // 1. TẢI DROPDOWN ĐỢT ĐĂNG KÝ
 async function loadRegistrationPeriodsDropdown() {
     try {
-        const response = await apiFetch(`/registration-periods`, {
+        const response = await apiFetchAll(`/registration-periods`, {
             headers: { 'Authorization': `Bearer ${getToken()}` }
         });
         const result = await response.json();
@@ -253,9 +253,9 @@ async function loadGroups() {
     }
 
     try {
-        const response = await apiFetch(`/groups${queryString}`, {
+        const response = await apiFetchTable(`/groups${queryString}`, {
             headers: { 'Authorization': `Bearer ${getToken()}` }
-        });
+        }, 'groupTableBody', loadGroups);
         const result = await response.json();
 
         if (response.ok && result.success) {

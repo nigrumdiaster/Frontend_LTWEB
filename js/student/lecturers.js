@@ -42,10 +42,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     function render() {
-        const kw = removeVietnameseTones(searchInput.value);
-        const list = allLecturers.filter(l =>
-            !kw || [l.fullName, l.code, l.email, l.phone, l.username]
-                .some(v => removeVietnameseTones(v).includes(kw)));
+        const list = allLecturers;
 
         if (list.length === 0) {
             tbody.innerHTML = '<tr><td colspan="100%" class="text-center py-4">Chưa có dữ liệu</td></tr>';
@@ -61,11 +58,12 @@ document.addEventListener('DOMContentLoaded', async () => {
                     <td style="padding: 10px 12px; color: ${l.active ? '#15803d' : '#b91c1c'};">${l.active ? 'Hoạt động' : 'Đã khóa'}</td>
                 </tr>`).join('');
         }
-        countEl.textContent = `Hiển thị ${list.length} / ${allLecturers.length} giảng viên`;
+        countEl.textContent = `Hiển thị ${list.length} / ${getServerPagination(tbody)?.totalElements ?? allLecturers.length} giảng viên`;
     }
 
     async function loadLecturers() {
         if (!deptSelect.value) {
+            hideServerPagination('lecturerTableBody');
             allLecturers = [];
             tbody.innerHTML = '<tr><td colspan="100%" class="text-center py-4">Chưa có dữ liệu</td></tr>';
             countEl.textContent = '';
@@ -75,10 +73,10 @@ document.addEventListener('DOMContentLoaded', async () => {
         showError('');
         tbody.innerHTML = '<tr><td colspan="100%" class="text-center py-4">Đang tải dữ liệu...</td></tr>';
         try {
-            const response = await apiFetch(`/users/lecturers/department/${encodeURIComponent(deptSelect.value)}`, {
+            const response = await apiFetchTable(`/users/lecturers/department/${encodeURIComponent(deptSelect.value)}?keyword=${encodeURIComponent(searchInput.value.trim())}`, {
                 method: 'GET',
                 headers: { 'Content-Type': 'application/json' }
-            });
+            }, 'lecturerTableBody', loadLecturers);
             const result = await response.json();
 
             if (response.ok && result.success) {
@@ -99,7 +97,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Đổ danh sách bộ môn (GET /api/departments); lỗi thì giữ lựa chọn mặc định
     async function loadDepartments() {
         try {
-            const response = await apiFetch('/departments', { method: 'GET' });
+            const response = await apiFetchAll('/departments', { method: 'GET' });
             const result = await response.json();
             const depts = response.ok && Array.isArray(result.data) ? result.data : [];
             if (depts.length) {
@@ -120,7 +118,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     document.getElementById('btnReload').addEventListener('click', loadLecturers);
     deptSelect.addEventListener('change', loadLecturers);
-    searchInput.addEventListener('input', render);
+    searchInput.addEventListener('input', debounce(loadLecturers));
 
     loadDepartments().then(loadLecturers);
 });

@@ -85,7 +85,7 @@ async function loadRegisterDepartments() {
     if (!select) return;
 
     try {
-        const response = await apiFetch('/departments', { method: 'GET' });
+        const response = await apiFetchAll('/departments', { method: 'GET' });
         const result = await response.json();
         if (!response.ok || !result.success || !Array.isArray(result.data)) {
             throw new Error(result.message || 'Không thể tải danh sách bộ môn.');

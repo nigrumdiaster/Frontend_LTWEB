@@ -1661,6 +1661,12 @@ body {
     gap: 6px;
 }
 
+.table-pagination-pages {
+    justify-content: flex-end;
+    margin-left: auto;
+    max-width: 100%;
+}
+
 .table-pagination-size select, .table-pagination-button {
     width: auto;
     min-height: 34px;
@@ -1672,7 +1678,7 @@ body {
     font: inherit;
 }
 
-.table-pagination-button { cursor: pointer; }
+.table-pagination-button { cursor: pointer; flex: 0 0 auto; white-space: nowrap; }
 .table-pagination-button:hover:not(:disabled) { background: #f1f5f9; }
 .table-pagination-button[aria-current="page"] {
     background: #0f172a;

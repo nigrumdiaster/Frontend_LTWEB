@@ -35,7 +35,7 @@ async function callAPI(path, options = {}) {
         opts.body = JSON.stringify(opts.body);
     }
     try {
-        const response = await apiFetch(path, opts);
+        const response = await apiFetchAll(path, opts);
         const result = response.status === 204 ? {} : await response.json();
         return { ok: response.ok && result.success !== false, status: response.status, result };
     } catch (error) {

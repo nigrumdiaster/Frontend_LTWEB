@@ -19,7 +19,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
 async function loadLecturerOptions() {
     try {
-        const response = await apiFetch('/users?role=ROLE_LECTURER', { method: 'GET' });
+        const response = await apiFetchAll('/users?role=ROLE_LECTURER', { method: 'GET' });
         const result = await response.json();
         if (!response.ok || !result.success || !Array.isArray(result.data)) {
             throw new Error(result.message || 'Không thể tải danh sách giảng viên.');
@@ -45,13 +45,13 @@ async function loadLecturerOptions() {
 async function loadDepartments() {
     showTableMessage('Đang tải dữ liệu...');
     try {
-        const response = await apiFetch(`/departments`, {
+        const response = await apiFetchTable(`/departments`, {
             method: 'GET',
             headers: {
                 'Authorization': `Bearer ${getToken()}`,
                 'Content-Type': 'application/json'
             }
-        });
+        }, 'deptTableBody', loadDepartments);
 
         const result = await response.json();
 
