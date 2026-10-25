@@ -283,24 +283,25 @@ function renderGroupTable(groups) {
 
     tbody.innerHTML = groups.map(g => {
         const leaderName = g.leader?.fullName || g.leaderName || 'Chưa có';
-        const leaderCode = g.leader?.code || g.leaderCode || '';
+        const leaderCode = g.members?.find(m => m.groupRole === 'LEADER')?.studentCode || g.leader?.code || g.leaderCode || '';
         const leaderDisplay = leaderCode ? `${leaderName} (${leaderCode})` : leaderName;
 
         const periodName = g.period?.name || g.periodName || `Đợt ${g.periodId || ''}`;
-        const topicDisplay = g.topic ? (g.topic.titleVi || g.topic.title || g.topic.name || 'Đã đăng ký') : '<span style="color: #94a3b8;">Chưa đăng ký</span>';
+        const topicTitle = g.topicTitleVi || g.topic?.titleVi || g.topic?.title || g.topic?.name;
+        const topicDisplay = topicTitle ? escapeText(topicTitle) : '<span style="color: #94a3b8;">Chưa đăng ký</span>';
 
         const statusBadge = getStatusBadgeHtml(g.status);
 
         return `
             <tr>
-                <td><strong>#${g.id}</strong></td>
-                <td><strong style="color: #1e40af;">${g.groupCode || `N${g.id}`}</strong></td>
-                <td>${periodName}</td>
+                <td><strong style="color: #1e40af;">${escapeText(g.code || g.groupCode || `N${g.id}`)}</strong></td>
                 <td>
-                    <div style="font-weight: 500;">${leaderDisplay}</div>
-                    <small style="color: #64748b;">Sĩ số: ${g.memberCount || (g.members ? g.members.length : 1)} SV</small>
+                    <div style="font-weight: 500;">${escapeText(leaderDisplay)}</div>
+                    <small style="color: #64748b;">Sĩ số: ${g.memberCount ?? g.members?.length ?? 0} SV</small>
                 </td>
+                <td>${escapeText(periodName)}</td>
                 <td>${topicDisplay}</td>
+                <td>${getGroupReportHtml(g)}</td>
                 <td>${statusBadge}</td>
                 <td style="text-align: right;">
                     <button class="btn btn-sm btn-primary" onclick="viewGroupDetail(${g.id})">
@@ -320,40 +321,50 @@ async function viewGroupDetail(groupId) {
         });
         const result = await response.json();
 
-        if (response.ok && result.success) {
+        if (response.ok && result.success && result.data) {
             const g = result.data;
 
-            document.getElementById('modalGroupCode').textContent = g.groupCode || `N${g.id}`;
+            document.getElementById('modalGroupCode').textContent = g.code || g.groupCode || `N${g.id}`;
             document.getElementById('modalPeriodName').textContent = g.period?.name || g.periodName || `Đợt ${g.periodId || ''}`;
-            document.getElementById('modalTopicName').textContent = g.topic ? (g.topic.titleVi || g.topic.title || g.topic.name) : 'Chưa đăng ký';
+            document.getElementById('modalTopicTitle').textContent = g.topicTitleVi || g.topic?.titleVi || g.topic?.title || g.topic?.name || 'Chưa đăng ký';
+            document.getElementById('modalAdvisorName').textContent = [g.topic?.primaryAdvisorName, g.topic?.coAdvisorName].filter(Boolean).join(', ') || 'Chưa phân công';
             document.getElementById('modalGroupStatus').innerHTML = getStatusBadgeHtml(g.status);
 
-            const reportLink = document.getElementById('modalReportLink');
-            if (g.reportFileUrl) {
-                reportLink.innerHTML = `<a href="${g.reportFileUrl}" target="_blank" style="color: #2563eb; font-weight: 500;">📄 Tải về / Xem báo cáo</a>`;
-            } else {
-                reportLink.innerHTML = '<span style="color: #94a3b8;">Chưa nộp báo cáo</span>';
-            }
+            document.getElementById('modalReportStatus').innerHTML = getGroupReportHtml(g);
 
             const members = Array.isArray(g.members) ? g.members : [];
             const tbody = document.getElementById('modalMembersTableBody');
             tbody.innerHTML = members.map(m => `
                 <tr>
-                    <td><strong>${m.studentCode || m.code || '-'}</strong></td>
-                    <td>${m.studentName || m.fullName || '-'}</td>
-                    <td>${m.studentClass || '-'}</td>
-                    <td><small>${m.studentEmail || m.email || '-'}</small></td>
+                    <td><strong>${escapeText(m.studentCode || m.code || '-')}</strong></td>
+                    <td>${escapeText(m.studentName || m.fullName || '-')}</td>
+                    <td>${escapeText(m.studentClass || '-')}</td>
+                    <td><small>${escapeText(m.studentEmail || m.email || '-')}</small></td>
                     <td>${(m.groupRole === 'LEADER' || m.isLeader) ? '<span class="badge badge-success">Nhóm trưởng</span>' : '<span class="badge badge-secondary">Thành viên</span>'}</td>
                 </tr>
-            `).join('');
+            `).join('') || '<tr><td colspan="5" class="text-center py-4">Chưa có thành viên.</td></tr>';
 
             document.getElementById('groupDetailModal').style.display = 'flex';
         } else {
-            await showAlert('Không thể lấy chi tiết nhóm!');
+            await showAlert(result.message || 'Không thể lấy chi tiết nhóm!');
         }
     } catch (err) {
         console.error('Lỗi viewGroupDetail:', err);
+        await showAlert('Không thể tải chi tiết nhóm. Vui lòng thử lại.');
     }
+}
+
+function getGroupReportHtml(group) {
+    const reportUrl = group.reportUrl || group.reportFileUrl;
+    if (reportUrl) {
+        try {
+            const url = new URL(reportUrl, window.location.href);
+            if (['http:', 'https:'].includes(url.protocol)) {
+                return `<a href="${escapeText(url.href)}" target="_blank" rel="noopener noreferrer">📄 Xem báo cáo</a>`;
+            }
+        } catch { /* Treat invalid links as unavailable. */ }
+    }
+    return '<span style="color: #94a3b8;">Chưa nộp báo cáo</span>';
 }
 
 function closeGroupModal() {
@@ -370,7 +381,7 @@ function getStatusBadgeHtml(status) {
     if (s === 'SUBMITTED') return '<span class="badge badge-success">Đã nộp báo cáo</span>';
     if (s === 'DEFENDED') return '<span class="badge badge-info">Đã bảo vệ</span>';
     if (s === 'COMPLETED') return '<span class="badge badge-success">Hoàn thành</span>';
-    return `<span class="badge badge-secondary">${status}</span>`;
+    return `<span class="badge badge-secondary">${escapeText(status)}</span>`;
 }
 
 window.selectPeriodFilter = selectPeriodFilter;

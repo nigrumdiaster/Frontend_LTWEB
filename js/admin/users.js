@@ -206,6 +206,7 @@ function openCreateModal() {
     document.getElementById('userUsername').required = true;
     document.getElementById('userPassword').required = true;
     document.getElementById('userSaveButton').textContent = 'Tạo Mới';
+    syncUserFormSelects();
     modal.style.display = 'flex';
 }
 
@@ -224,13 +225,18 @@ async function editUser(id) {
         }
 
         const data = result.data;
+        document.getElementById('userForm').reset();
         document.getElementById('userId').value = data.id;
         document.getElementById('userFullName').value = data.fullName || '';
         document.getElementById('userEmail').value = data.email || '';
         document.getElementById('userPhone').value = data.phone || '';
         document.getElementById('userCode').value = data.code || '';
         document.getElementById('userRole').value = data.role || 'ROLE_STUDENT';
-        document.getElementById('userDeptId').value = data.departmentId ?? '';
+        const departmentSelect = document.getElementById('userDeptId');
+        if (data.departmentId != null && ![...departmentSelect.options].some(option => option.value === String(data.departmentId))) {
+            departmentSelect.add(new Option(data.departmentName || `Bộ môn ${data.departmentId}`, String(data.departmentId)));
+        }
+        departmentSelect.value = data.departmentId ?? '';
         document.getElementById('userStudentClass').value = data.studentClass || '';
         document.getElementById('userActive').value = String(data.active !== false);
         document.getElementById('userModalTitle').textContent = 'Cập Nhật Người Dùng';
@@ -238,11 +244,18 @@ async function editUser(id) {
         document.getElementById('userUsername').required = false;
         document.getElementById('userPassword').required = false;
         document.getElementById('userSaveButton').textContent = 'Cập Nhật';
+        syncUserFormSelects();
         document.getElementById('userModal').style.display = 'flex';
     } catch (error) {
         console.error('Lỗi GET user detail:', error);
         await showAlert('Không thể tải thông tin người dùng.');
     }
+}
+
+function syncUserFormSelects() {
+    document.querySelectorAll('#userForm select').forEach(select => {
+        select.dispatchEvent(new Event('change', { bubbles: true }));
+    });
 }
 
 async function handleSaveUser(e) {
