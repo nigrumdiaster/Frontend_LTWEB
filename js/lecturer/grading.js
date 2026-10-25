@@ -6,7 +6,7 @@
 document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('btnResetFilters').addEventListener('click', () => {
         document.getElementById('gradingSearch').value = '';
-        render();
+        load();
     });
 
     const area = document.getElementById('gradingArea');
@@ -76,7 +76,17 @@ document.addEventListener('DOMContentLoaded', () => {
     async function load() {
         showError('');
         area.innerHTML = `<div style="${card} color:#64748b;">Đang tải...</div>`;
-        const me = getMe();
+        let me = getMe();
+        if (!me?.id) {
+            const profile = await callAPI('/auth/me', { method: 'GET' });
+            if (!profile.ok || !profile.result.data?.id) {
+                area.innerHTML = '';
+                showError(profile.result.message || 'Không thể tải thông tin tài khoản. Vui lòng đăng nhập lại.');
+                return;
+            }
+            me = profile.result.data;
+            localStorage.setItem('user', JSON.stringify(me));
+        }
         const { ok, result } = await callAPI('/topics?isAssigned=true&advisorId=' + encodeURIComponent(me.id) + '&keyword=' + encodeURIComponent(searchInput.value.trim()), { method: 'GET', pagination: { target: 'gradingArea', reload: load } });
         if (!ok) { area.innerHTML = ''; showError(result.message || 'Không thể tải danh sách đề tài.'); return; }
 

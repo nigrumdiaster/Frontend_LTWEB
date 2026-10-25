@@ -161,6 +161,8 @@ async function openEditDeptModal(id) {
             document.getElementById('editHeadLecturerId').value = d.headLecturerId || '';
 
             document.getElementById('editDeptModal').style.display = 'flex';
+        } else {
+            await showAlert(result.message || 'Không thể tải thông tin bộ môn.', 'error');
         }
     } catch (error) {
         console.error('Lỗi GET detail dept:', error);

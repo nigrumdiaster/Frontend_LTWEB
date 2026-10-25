@@ -188,17 +188,17 @@ function renderResultsTable(results) {
     tbody.innerHTML = results.map(result => `
         <tr>
             <td>
-                <strong>${result.topic?.code || `DT${String(result.topicId).padStart(3, '0')}`}</strong><br>
-                <small>${result.topicTitleVi || result.topic?.titleVi || '-'}</small>
+                <strong>${escapeText(result.topic?.code || `DT${String(result.topicId).padStart(3, '0')}`)}</strong><br>
+                <small>${escapeText(result.topicTitleVi || result.topic?.titleVi || '-')}</small>
             </td>
-            <td>${result.studentGroupName || result.studentGroup?.code || '-'}</td>
+            <td>${escapeText(result.studentGroupName || result.studentGroup?.code || '-')}</td>
             <td>${formatScore(result.advisorAvgScore)}</td>
-            <td>${formatScore(result.reviewersScore)}</td>
+            <td>${formatScore(result.reviewerScore)}</td>
             <td>${formatScore(result.councilAvgScore)}</td>
             <td><strong>${formatScore(result.finalScore)}</strong></td>
             <td>
-                <strong>${result.letterGrade || '-'}</strong><br>
-                <span class="badge ${result.passed ? 'badge-success' : 'badge-danger'}">${result.passed ? 'ĐẠT' : 'KHÔNG ĐẠT'}</span>
+                <strong>${escapeText(result.letterGrade || '-')}</strong><br>
+                <span class="badge ${result.passed === true ? 'badge-success' : result.passed === false ? 'badge-danger' : 'badge-secondary'}">${result.passed === true ? 'ĐẠT' : result.passed === false ? 'KHÔNG ĐẠT' : 'Chưa có kết quả'}</span>
             </td>
             <td>${result.isPublished
                 ? '<span class="badge badge-success">Đã công bố</span>'
@@ -273,13 +273,13 @@ async function viewResultDetail(topicId) {
         const group = result.studentGroup || {};
         document.getElementById('resultSummary').innerHTML = `
             <div style="background: #f8fafc; padding: 16px; border-radius: 8px; border: 1px solid #e2e8f0;">
-                <p><strong>Đề tài:</strong> ${result.topicTitleVi || topic.titleVi || '-'} (${topic.code || '-'})</p>
-                <p><strong>Bộ môn:</strong> ${topic.departmentName || '-'}</p>
-                <p><strong>Giảng viên hướng dẫn:</strong> ${topic.primaryAdvisorName || '-'}</p>
-                <p><strong>Nhóm sinh viên:</strong> ${result.studentGroupName || group.code || '-'} — ${group.leaderName || '-'}</p>
-                <p><strong>Thành viên:</strong> ${(group.members || []).map(member => `${member.studentName} (${member.studentCode})`).join(', ') || '-'}</p>
-                <p><strong>Điểm tổng:</strong> ${formatScore(result.finalScore)} (${result.letterGrade || '-'}) — ${result.passed ? 'ĐẠT' : 'KHÔNG ĐẠT'}</p>
-                <p style="margin-bottom: 0;"><strong>Nhận xét Chủ tịch:</strong> ${result.chairmanSummary || '-'}</p>
+                <p><strong>Đề tài:</strong> ${escapeText(result.topicTitleVi || topic.titleVi || '-')} (${escapeText(topic.code || '-')})</p>
+                <p><strong>Bộ môn:</strong> ${escapeText(topic.departmentName || '-')}</p>
+                <p><strong>Giảng viên hướng dẫn:</strong> ${escapeText(topic.primaryAdvisorName || '-')}</p>
+                <p><strong>Nhóm sinh viên:</strong> ${escapeText(result.studentGroupName || group.code || '-')} — ${escapeText(group.leaderName || '-')}</p>
+                <p><strong>Thành viên:</strong> ${escapeText((group.members || []).map(member => `${member.studentName} (${member.studentCode})`).join(', ') || '-')}</p>
+                <p><strong>Điểm tổng:</strong> ${formatScore(result.finalScore)} (${escapeText(result.letterGrade || '-')}) — ${result.passed === true ? 'ĐẠT' : result.passed === false ? 'KHÔNG ĐẠT' : 'Chưa có kết quả'}</p>
+                <p style="margin-bottom: 0;"><strong>Nhận xét Chủ tịch:</strong> ${escapeText(result.chairmanSummary || '-')}</p>
             </div>
         `;
 
@@ -287,10 +287,10 @@ async function viewResultDetail(topicId) {
         document.getElementById('detailedGradesTableBody').innerHTML = grades.length
             ? grades.map(grade => `
                 <tr>
-                    <td>${grade.graderRole || '-'}</td>
-                    <td>${grade.graderName || '-'}</td>
+                    <td>${escapeText(grade.graderRole || '-')}</td>
+                    <td>${escapeText(grade.graderName || '-')}</td>
                     <td><strong>${formatScore(grade.score)}</strong></td>
-                    <td>${grade.feedback || '-'}</td>
+                    <td>${escapeText(grade.feedback || '-')}</td>
                     <td>${grade.gradedAt ? new Date(grade.gradedAt).toLocaleString('vi-VN') : '-'}</td>
                 </tr>
             `).join('')

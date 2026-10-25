@@ -123,17 +123,21 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     // ---------- Tải nhóm ----------
+    let groupRequestVersion = 0;
     async function loadGroup() {
+        const version = ++groupRequestVersion;
         showError('');
+        currentGroup = null;
         const periodId = periodSelect.value;
         if (!periodId) return;
         area.innerHTML = `<div style="${cardStyle()} color:#64748b;">Đang tải...</div>`;
         try {
             const { ok, status, result } = await callAPI('/groups/my-group?periodId=' + encodeURIComponent(periodId), { method: 'GET' });
+            if (version !== groupRequestVersion) return;
             if (ok && result.data) {
                 currentGroup = result.data;
                 await renderGroup(currentGroup);
-            } else if (status === 404 || (result && result.data === null)) {
+            } else if (status === 404 || (ok && result.data === null)) {
                 currentGroup = null;
                 selectedMembers = [];
                 renderNoGroup();
@@ -141,6 +145,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 throw new Error(result.message || 'Không thể tải thông tin nhóm.');
             }
         } catch (error) {
+            if (version !== groupRequestVersion) return;
             console.error('Lỗi tải nhóm:', error);
             area.innerHTML = '';
             showError(error.message || 'Lỗi kết nối máy chủ!');
@@ -323,6 +328,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             if (c) c.addEventListener('click', cancelTopic);
         } else if (canAct) {
             await renderTopicPicker(topicBox);
+            if (currentGroup !== g || !topicBox.isConnected) return;
         } else {
             topicBox.innerHTML = '<p style="color:#64748b; margin:0;">Nhóm chưa đăng ký đề tài. Nhóm trưởng sẽ đăng ký trong giai đoạn đăng ký của sinh viên.</p>';
         }
@@ -352,6 +358,11 @@ document.addEventListener('DOMContentLoaded', async () => {
     async function renderTopicPicker(box) {
         box.innerHTML = '<span style="color:#64748b;">Đang tải đề tài...</span>';
         const { ok, result } = await callAPI('/topics/published?periodId=' + encodeURIComponent(periodSelect.value), { method: 'GET' });
+        if (!box.isConnected) return;
+        if (!ok) {
+            box.textContent = result.message || 'Không thể tải danh sách đề tài. Vui lòng thử lại.';
+            return;
+        }
         const topics = ok && Array.isArray(result.data) ? result.data.filter(t => !t.isAssigned) : [];
         if (!topics.length) {
             box.innerHTML = '<p style="color:#64748b; margin:0;">Hiện chưa có đề tài còn trống để đăng ký trong đợt này.</p>';
@@ -363,7 +374,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 ${topics.map(t => `<option value="${t.id}">${escapeHtml(t.code)} - ${escapeHtml(t.titleVi)} (${escapeHtml(t.primaryAdvisorName || '')})</option>`).join('')}
             </select>
             <button type="button" class="btn btn-primary" id="btnRegisterTopic" style="margin-left:8px;">Đăng ký đề tài</button>`;
-        document.getElementById('btnRegisterTopic').addEventListener('click', registerTopic);
+        box.querySelector('#btnRegisterTopic').addEventListener('click', registerTopic);
     }
 
     async function registerTopic() {

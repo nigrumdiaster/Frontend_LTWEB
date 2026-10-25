@@ -800,7 +800,7 @@ async function assignTopics(event) {
     const payload = {
         topicIds,
         defenseDate: defenseTime.replace('T', ' '),
-        defenseTime: new Date(defenseTime).toISOString(),
+        defenseTime,
         notes: document.getElementById('assignCouncilNotes').value.trim()
     };
 

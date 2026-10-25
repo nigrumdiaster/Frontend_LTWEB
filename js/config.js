@@ -387,6 +387,23 @@ function enhanceSelect(select) {
     });
 
     select.addEventListener('change', renderOptions);
+    // Assigning a native select value does not emit change. Keep its visible
+    // control in sync when API data or a filter reset sets the value directly.
+    for (const property of ['value', 'selectedIndex']) {
+        const descriptor = Object.getOwnPropertyDescriptor(HTMLSelectElement.prototype, property);
+        Object.defineProperty(select, property, {
+            configurable: true,
+            get() { return descriptor.get.call(this); },
+            set(value) {
+                descriptor.set.call(this, value);
+                renderOptions();
+            }
+        });
+    }
+    select.form?.addEventListener('reset', () => {
+        // The reset event fires before the browser restores default values.
+        queueMicrotask(() => { search.value = ''; closeDropdown(); renderOptions(); });
+    });
     select.addEventListener('invalid', () => {
         openDropdown();
         trigger.focus();

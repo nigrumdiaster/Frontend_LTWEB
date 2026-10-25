@@ -1,6 +1,7 @@
 (function () {
     const roleLabels = {
         ROLE_ADMIN: 'Quản trị viên',
+        ROLE_DEAN: 'Trưởng khoa',
         ROLE_DEPARTMENT_HEAD: 'Trưởng bộ môn',
         ROLE_LECTURER: 'Giảng viên',
         ROLE_STUDENT: 'Sinh viên'
@@ -75,7 +76,7 @@
         const normalizedRole = String(user.role || '').toUpperCase();
         const role = roleLabels[normalizedRole] || roleLabels[`ROLE_${normalizedRole}`] || user.role;
         setProfileValue('profile-role', role || 'Chưa cập nhật');
-        setProfileValue('profile-department', user.departmentName || 'Công nghệ thông tin');
+        setProfileValue('profile-department', user.departmentName || 'Chưa cập nhật');
         setProfileValue('profile-class', user.className || user.studentClass || 'N/A');
     }
 

@@ -148,6 +148,7 @@ function showTableMessage(msg) {
 // 2. POST /api/registration-periods
 async function handleCreateRegistrationPeriod(e) {
     e.preventDefault();
+    if (!document.getElementById('createPeriodForm').reportValidity()) return;
 
     const payload = {
         name: document.getElementById('createName').value.trim(),
@@ -155,10 +156,10 @@ async function handleCreateRegistrationPeriod(e) {
         semester: document.getElementById('createSemester').value.trim(),
         academicYear: document.getElementById('createAcademicYear').value.trim(),
         description: document.getElementById('createDescription').value.trim(),
-        lecturerRegStart: new Date(document.getElementById('createLecturerRegStart').value).toISOString(),
-        lecturerRegEnd: new Date(document.getElementById('createLecturerRegEnd').value).toISOString(),
-        studentRegStart: new Date(document.getElementById('createStudentRegStart').value).toISOString(),
-        studentRegEnd: new Date(document.getElementById('createStudentRegEnd').value).toISOString(),
+        lecturerRegStart: document.getElementById('createLecturerRegStart').value,
+        lecturerRegEnd: document.getElementById('createLecturerRegEnd').value,
+        studentRegStart: document.getElementById('createStudentRegStart').value,
+        studentRegEnd: document.getElementById('createStudentRegEnd').value,
         reviewerDeadline: document.getElementById('createReviewerDeadline').value,
         defenseDate: document.getElementById('createDefenseDate').value
     };
@@ -184,6 +185,7 @@ async function handleCreateRegistrationPeriod(e) {
         }
     } catch (error) {
         console.error('Lỗi POST /api/registration-periods:', error);
+        await showAlert('Không thể tạo đợt đăng ký. Vui lòng thử lại.', 'error');
     }
 }
 
@@ -208,24 +210,28 @@ async function openEditRegistrationPeriodModal(id) {
             document.getElementById('editAcademicYear').value = data.academicYear || '';
             document.getElementById('editDescription').value = data.description || '';
 
-            if (data.lecturerRegStart) document.getElementById('editLecturerRegStart').value = data.lecturerRegStart.slice(0, 16);
-            if (data.lecturerRegEnd) document.getElementById('editLecturerRegEnd').value = data.lecturerRegEnd.slice(0, 16);
-            if (data.studentRegStart) document.getElementById('editStudentRegStart').value = data.studentRegStart.slice(0, 16);
-            if (data.studentRegEnd) document.getElementById('editStudentRegEnd').value = data.studentRegEnd.slice(0, 16);
+            document.getElementById('editLecturerRegStart').value = data.lecturerRegStart?.slice(0, 16) || '';
+            document.getElementById('editLecturerRegEnd').value = data.lecturerRegEnd?.slice(0, 16) || '';
+            document.getElementById('editStudentRegStart').value = data.studentRegStart?.slice(0, 16) || '';
+            document.getElementById('editStudentRegEnd').value = data.studentRegEnd?.slice(0, 16) || '';
             
             document.getElementById('editReviewerDeadline').value = data.reviewerDeadline || '';
             document.getElementById('editDefenseDate').value = data.defenseDate || '';
 
             document.getElementById('editPeriodModal').style.display = 'flex';
+        } else {
+            await showAlert(result.message || 'Không thể tải thông tin đợt đăng ký.', 'error');
         }
     } catch (error) {
         console.error('Lỗi GET detail period:', error);
+        await showAlert('Không thể tải thông tin đợt đăng ký. Vui lòng thử lại.', 'error');
     }
 }
 
 // 4. PUT /api/registration-periods/{id}
 async function handleEditRegistrationPeriod(e) {
     e.preventDefault();
+    if (!document.getElementById('editPeriodForm').reportValidity()) return;
     const id = document.getElementById('editPeriodId').value;
 
     const payload = {
@@ -234,10 +240,10 @@ async function handleEditRegistrationPeriod(e) {
         semester: document.getElementById('editSemester').value.trim(),
         academicYear: document.getElementById('editAcademicYear').value.trim(),
         description: document.getElementById('editDescription').value.trim(),
-        lecturerRegStart: new Date(document.getElementById('editLecturerRegStart').value).toISOString(),
-        lecturerRegEnd: new Date(document.getElementById('editLecturerRegEnd').value).toISOString(),
-        studentRegStart: new Date(document.getElementById('editStudentRegStart').value).toISOString(),
-        studentRegEnd: new Date(document.getElementById('editStudentRegEnd').value).toISOString(),
+        lecturerRegStart: document.getElementById('editLecturerRegStart').value,
+        lecturerRegEnd: document.getElementById('editLecturerRegEnd').value,
+        studentRegStart: document.getElementById('editStudentRegStart').value,
+        studentRegEnd: document.getElementById('editStudentRegEnd').value,
         reviewerDeadline: document.getElementById('editReviewerDeadline').value,
         defenseDate: document.getElementById('editDefenseDate').value
     };
@@ -262,6 +268,7 @@ async function handleEditRegistrationPeriod(e) {
         }
     } catch (error) {
         console.error('Lỗi PUT /api/registration-periods/{id}:', error);
+        await showAlert('Không thể cập nhật đợt đăng ký. Vui lòng thử lại.', 'error');
     }
 }
 

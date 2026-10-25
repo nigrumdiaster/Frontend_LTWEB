@@ -572,6 +572,7 @@ async function handleCreateTopic(e) {
         }
     } catch (error) {
         console.error('Lỗi POST /api/topics:', error);
+        await showAlert('Không thể tạo đề tài. Vui lòng thử lại.', 'error');
     }
 }
 
@@ -598,9 +599,12 @@ async function openEditTopicModal(id) {
             document.getElementById('editRequirements').value = data.requirements || '';
 
             document.getElementById('editTopicModal').style.display = 'flex';
+        } else {
+            await showAlert(result.message || 'Không thể tải thông tin đề tài.', 'error');
         }
     } catch (error) {
         console.error('Lỗi GET detail topic:', error);
+        await showAlert('Không thể tải thông tin đề tài. Vui lòng thử lại.', 'error');
     }
 }
 
@@ -646,6 +650,7 @@ async function handleEditTopic(e) {
         }
     } catch (error) {
         console.error('Lỗi PUT /api/topics/{id}:', error);
+        await showAlert('Không thể cập nhật đề tài. Vui lòng thử lại.', 'error');
     }
 }
 
@@ -692,6 +697,7 @@ async function handleApproval(e) {
         }
     } catch (error) {
         console.error('Lỗi PATCH approval:', error);
+        await showAlert('Không thể cập nhật trạng thái đề tài. Vui lòng thử lại.', 'error');
     }
 }
 
@@ -715,6 +721,7 @@ async function deleteTopic(id) {
         }
     } catch (error) {
         console.error('Lỗi DELETE /api/topics/{id}:', error);
+        await showAlert('Không thể xóa đề tài. Vui lòng thử lại.', 'error');
     }
 }
 
@@ -736,18 +743,21 @@ async function openDetailTopicModal(id) {
                 <div><strong>Tên Tiếng Anh:</strong> ${escapeText(t.titleEn || '-')}</div>
                 <div><strong>Đợt đăng ký:</strong> ${escapeText(t.periodName || '-')}</div>
                 <div><strong>Bộ môn:</strong> ${escapeText(t.departmentName || '-')}</div>
-                <div><strong>GVHD Chính:</strong> ${escapeText(t.primaryAdvisorName || '-')} (${t.primaryAdvisorEmail || '-'})</div>
+                <div><strong>GVHD Chính:</strong> ${escapeText(t.primaryAdvisorName || '-')} (${escapeText(t.primaryAdvisorEmail || '-')})</div>
                 <div><strong>GV Đồng HD:</strong> ${escapeText(t.coAdvisorName || 'Không có')}</div>
                 <div><strong>Số SV tối đa:</strong> ${escapeText(t.maxStudents ?? '-')} Sinh viên</div>
                 <div><strong>Trạng thái duyệt:</strong> ${formatStatusBadge(t.approvalStatus)}</div>
-                ${t.rejectionReason ? `<div style="color: #ef4444;"><strong>Lý do từ chối:</strong> ${t.rejectionReason}</div>` : ''}
-                <div><strong>Mô tả:</strong> ${t.description || 'Chưa có mô tả'}</div>
-                <div><strong>Yêu cầu:</strong> ${t.requirements || 'Chưa có yêu cầu'}</div>
+                ${t.rejectionReason ? `<div style="color: #ef4444;"><strong>Lý do từ chối:</strong> ${escapeText(t.rejectionReason)}</div>` : ''}
+                <div><strong>Mô tả:</strong> ${escapeText(t.description || 'Chưa có mô tả')}</div>
+                <div><strong>Yêu cầu:</strong> ${escapeText(t.requirements || 'Chưa có yêu cầu')}</div>
             `;
             document.getElementById('detailTopicModal').style.display = 'flex';
+        } else {
+            await showAlert(result.message || 'Không thể tải chi tiết đề tài.', 'error');
         }
     } catch (err) {
         console.error('Lỗi tải chi tiết:', err);
+        await showAlert('Không thể tải chi tiết đề tài. Vui lòng thử lại.', 'error');
     }
 }
 
