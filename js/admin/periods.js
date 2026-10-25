@@ -130,7 +130,7 @@ function renderRegistrationPeriodsTable(periods) {
             </td>
             <td>${formatStatusBadge(p.status)}</td>
             <td style="text-align: right;">
-                <button onclick="openStatusModal(${p.id}, '${p.status}')" class="btn btn-sm btn-ghost" title="Đổi trạng thái">🔄 Trạng thái</button>
+                <button onclick="openStatusModal(${p.id}, '${p.status}')" class="btn btn-sm btn-secondary" title="Đổi trạng thái">🔄 Trạng thái</button>
                 <button onclick="openEditRegistrationPeriodModal(${p.id})" class="btn btn-sm btn-action-edit">Sửa</button>
                 <button onclick="deleteRegistrationPeriod(${p.id})" class="btn btn-sm btn-action-delete">Xóa</button>
             </td>

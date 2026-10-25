@@ -126,12 +126,6 @@ async function initDropdowns() {
             '/departments',
             ['Tất cả bộ môn', 'Chọn bộ môn...', 'Chọn bộ môn...'],
             department => department.name || `Bộ môn ${department.id}`
-        ),
-        populateSelectOptions(
-            ['createCoAdvisorId', 'editCoAdvisorId'],
-            '/users?role=ROLE_LECTURER',
-            ['Không có giảng viên đồng hướng dẫn', 'Không có giảng viên đồng hướng dẫn'],
-            lecturer => lecturer.fullName || lecturer.name || lecturer.username || `Giảng viên ${lecturer.id}`
         )
     ]);
     renderFilterStatusDropdown();
@@ -504,15 +498,14 @@ function renderTopicsTable(topics) {
                 <small style="color: #4f46e5;">${escapeText(t.periodName || '-')}</small>
             </td>
             <td>
-                <small><strong>Chính:</strong> ${escapeText(t.primaryAdvisorName || '-')}</small><br>
-                <small style="color: #64748b;"><strong>Đồng:</strong> ${escapeText(t.coAdvisorName || 'Không có')}</small>
+                ${escapeText(t.primaryAdvisorName || '-')}
             </td>
             <td><span class="badge badge-secondary">${escapeText(t.maxStudents ?? '-')} SV</span></td>
             <td>${formatStatusBadge(t.approvalStatus)}</td>
             <td>${renderAssignedGroup(t)}</td>
             <td style="text-align: right; white-space: nowrap;">
                 <button onclick="openDetailTopicModal(${t.id})" class="btn btn-sm btn-action-view" title="Xem chi tiết">👁️ Chi tiết</button>
-                <button onclick="openApprovalModal(${t.id})" class="btn btn-sm btn-primary">✔️ Trạng thái</button>
+                <button onclick="openApprovalModal(${t.id})" class="btn btn-sm btn-secondary">✔️ Trạng thái</button>
                 <button onclick="openEditTopicModal(${t.id})" class="btn btn-sm btn-action-edit">Sửa</button>
                 <button onclick="deleteTopic(${t.id})" class="btn btn-sm btn-action-delete">Xóa</button>
             </td>
@@ -617,7 +610,6 @@ async function handleCreateTopic(e) {
         return;
     }
 
-    const coAdvisorVal = document.getElementById('createCoAdvisorId').value;
 
     const payload = {
         titleVi: document.getElementById('createTitleVi').value.trim(),
@@ -625,7 +617,6 @@ async function handleCreateTopic(e) {
         periodId: parseInt(periodVal, 10),
         departmentId: parseInt(deptVal, 10),
         maxStudents: parseInt(document.getElementById('createMaxStudents').value, 10),
-        coAdvisorId: coAdvisorVal ? parseInt(coAdvisorVal, 10) : null,
         description: document.getElementById('createDescription').value.trim(),
         requirements: document.getElementById('createRequirements').value.trim()
     };
@@ -673,7 +664,6 @@ async function openEditTopicModal(id) {
             document.getElementById('editDepartmentId').value = data.departmentId ? String(data.departmentId) : '';
 
             document.getElementById('editMaxStudents').value = data.maxStudents ?? '';
-            document.getElementById('editCoAdvisorId').value = data.coAdvisorId || '';
             document.getElementById('editDescription').value = data.description || '';
             document.getElementById('editRequirements').value = data.requirements || '';
 
@@ -697,14 +687,12 @@ async function handleEditTopic(e) {
         return;
     }
 
-    const coAdvisorVal = document.getElementById('editCoAdvisorId').value;
 
     const payload = {
         titleVi: document.getElementById('editTitleVi').value.trim(),
         titleEn: document.getElementById('editTitleEn').value.trim(),
         departmentId: parseInt(deptVal, 10),
         maxStudents: parseInt(document.getElementById('editMaxStudents').value, 10),
-        coAdvisorId: coAdvisorVal ? parseInt(coAdvisorVal, 10) : null,
         description: document.getElementById('editDescription').value.trim(),
         requirements: document.getElementById('editRequirements').value.trim()
     };
@@ -766,8 +754,17 @@ async function openApprovalModal(id) {
     }
 }
 
+function selectApprovalStatus(status) {
+    document.getElementById('approvalStatusSelect').value = status;
+    toggleRejectionReason();
+}
+
 function toggleRejectionReason() {
     const status = document.getElementById('approvalStatusSelect').value;
+    document.querySelectorAll('input[name="topicApprovalStatus"]').forEach(input => {
+        input.checked = input.value === status;
+        input.disabled = savingApproval || (approvalAssigned && input.value !== 'APPROVED');
+    });
     const group = document.getElementById('rejectionReasonGroup');
     if (group) group.style.display = status === 'REJECTED' ? 'block' : 'none';
     document.getElementById('rejectionReason').required = status === 'REJECTED';
@@ -864,8 +861,7 @@ async function openDetailTopicModal(id) {
                 <div><strong>Tên Tiếng Anh:</strong> ${escapeText(t.titleEn || '-')}</div>
                 <div><strong>Đợt đăng ký:</strong> ${escapeText(t.periodName || '-')}</div>
                 <div><strong>Bộ môn:</strong> ${escapeText(t.departmentName || '-')}</div>
-                <div><strong>GVHD Chính:</strong> ${escapeText(t.primaryAdvisorName || '-')} (${escapeText(t.primaryAdvisorEmail || '-')})</div>
-                <div><strong>GV Đồng HD:</strong> ${escapeText(t.coAdvisorName || 'Không có')}</div>
+                <div><strong>Giảng viên hướng dẫn:</strong> ${escapeText(t.primaryAdvisorName || '-')} (${escapeText(t.primaryAdvisorEmail || '-')})</div>
                 <div><strong>Số SV tối đa:</strong> ${escapeText(t.maxStudents ?? '-')} Sinh viên</div>
                 <div><strong>Trạng thái duyệt:</strong> ${formatStatusBadge(t.approvalStatus)}</div>
                 <div><strong>Nhóm đã đăng ký:</strong> ${renderAssignedGroup(t)}</div>

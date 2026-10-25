@@ -304,7 +304,7 @@ function renderGroupTable(groups) {
                 <td>${getGroupReportHtml(g)}</td>
                 <td>${statusBadge}</td>
                 <td style="text-align: right;">
-                    <button class="btn btn-sm btn-primary" onclick="viewGroupDetail(${g.id})">
+                    <button class="btn btn-sm btn-action-view" onclick="viewGroupDetail(${g.id})">
                         Chi tiết
                     </button>
                 </td>
@@ -327,7 +327,7 @@ async function viewGroupDetail(groupId) {
             document.getElementById('modalGroupCode').textContent = g.code || g.groupCode || `N${g.id}`;
             document.getElementById('modalPeriodName').textContent = g.period?.name || g.periodName || `Đợt ${g.periodId || ''}`;
             document.getElementById('modalTopicTitle').textContent = g.topicTitleVi || g.topic?.titleVi || g.topic?.title || g.topic?.name || 'Chưa đăng ký';
-            document.getElementById('modalAdvisorName').textContent = [g.topic?.primaryAdvisorName, g.topic?.coAdvisorName].filter(Boolean).join(', ') || 'Chưa phân công';
+            document.getElementById('modalAdvisorName').textContent = g.topic?.primaryAdvisorName || 'Chưa phân công';
             document.getElementById('modalGroupStatus').innerHTML = getStatusBadgeHtml(g.status);
 
             document.getElementById('modalReportStatus').innerHTML = getGroupReportHtml(g);

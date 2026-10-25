@@ -12,7 +12,7 @@ function closeTopicModal() { const m = document.getElementById('topicModal'); if
 function isMyTopic(t) {
     const me = getMe();
     if (!me) return false;
-    return String(t.primaryAdvisorId) === String(me.id) || String(t.coAdvisorId) === String(me.id);
+    return String(t.primaryAdvisorId) === String(me.id);
 }
 
 function topicGroupText(t) {
@@ -37,8 +37,7 @@ async function showTopicDetail(id) {
         wide('Tên đề tài (Tiếng Anh)', escapeHtml(t.titleEn || '-')),
         wide('Mô tả', escapeHtml(t.description || '-')),
         wide('Yêu cầu', escapeHtml(t.requirements || '-')),
-        field('GV hướng dẫn chính', advisor(t.primaryAdvisorName, t.primaryAdvisorEmail)),
-        field('GV đồng hướng dẫn', advisor(t.coAdvisorName, t.coAdvisorEmail)),
+        field('Giảng viên hướng dẫn', advisor(t.primaryAdvisorName, t.primaryAdvisorEmail)),
         field('Bộ môn', escapeHtml(t.departmentName || '-')),
         field('Đợt đăng ký', escapeHtml(t.periodName || '-')),
         field('Số sinh viên tối đa', t.maxStudents ?? '-'),
@@ -93,13 +92,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 <td style="padding: 10px 12px;">${i + 1}</td>
                 <td style="padding: 10px 12px; font-weight: 600;">${escapeHtml(t.code)}</td>
                 <td style="padding: 10px 12px; min-width: 240px;">${escapeHtml(t.titleVi)}</td>
-                <td style="padding: 10px 12px;">${escapeHtml(t.primaryAdvisorName || '-')}${t.coAdvisorName ? '<br><small style="color:#64748b;">+ ' + escapeHtml(t.coAdvisorName) + '</small>' : ''}</td>
+                <td style="padding: 10px 12px;">${escapeHtml(t.primaryAdvisorName || '-')}</td>
                 <td style="padding: 10px 12px;">${escapeHtml(t.periodName || '-')}</td>
                 <td style="padding: 10px 12px;">${approvalBadge(t.approvalStatus)}</td>
                 <td style="padding: 10px 12px;">${topicGroupText(t)}</td>
                 <td style="padding: 10px 12px; white-space: nowrap;">
-                    <button type="button" class="btn btn-secondary btn-sm" onclick="showTopicDetail(${t.id})">Chi tiết</button>
-                    ${isMyTopic(t) && !t.isAssigned ? `<button type="button" class="btn btn-secondary btn-sm" onclick="openEditTopic(${t.id})">Sửa</button> <button type="button" class="btn btn-secondary btn-sm" onclick="deleteTopic(${t.id})">Xóa</button>` : ''}
+                    <button type="button" class="btn btn-action-view btn-sm" onclick="showTopicDetail(${t.id})">Chi tiết</button>
+                    ${isMyTopic(t) && !t.isAssigned ? `<button type="button" class="btn btn-action-edit btn-sm" onclick="openEditTopic(${t.id})">Sửa</button> <button type="button" class="btn btn-action-delete btn-sm" onclick="deleteTopic(${t.id})">Xóa</button>` : ''}
                     ${canApprove(t) ? `<button type="button" class="btn btn-primary btn-sm" onclick="openApproval(${t.id})">Duyệt</button>` : ''}
                 </td>
             </tr>`).join('')
@@ -157,28 +156,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
 // ===================== ĐỀ XUẤT ĐỀ TÀI (POST /api/topics) =====================
-// TopicCreateRequest: titleVi*, titleEn, description*, requirements, maxStudents*, departmentId*, periodId*, coAdvisorId
+// TopicCreateRequest: titleVi*, titleEn, description*, requirements, maxStudents*, departmentId*, periodId*
 
 function openCreateModal() { const m = document.getElementById('createTopicModal'); if (m) m.style.display = 'flex'; }
 function closeCreateTopic() { const m = document.getElementById('createTopicModal'); if (m) m.style.display = 'none'; }
 
-async function loadCoAdvisors() {
-    const deptId = document.getElementById('ctDepartment').value;
-    const select = document.getElementById('ctCoAdvisor');
-    select.innerHTML = '<option value="">-- Không có --</option>';
-    if (!deptId) return;
-    const me = getMe();
-    const { ok, result } = await callAPI('/users/lecturers/department/' + encodeURIComponent(deptId), { method: 'GET' });
-    if (!ok) {
-        await showAlert(result.message || 'Không thể tải danh sách giảng viên.');
-        return;
-    }
-    if (!Array.isArray(result.data)) return;
-    result.data
-        .filter(u => u.active !== false && (!me || String(u.id) !== String(me.id)))
-        .forEach(u => select.insertAdjacentHTML('beforeend',
-            `<option value="${u.id}">${escapeHtml(u.fullName)}${u.code ? ' (' + escapeHtml(u.code) + ')' : ''}</option>`));
-}
 
 async function openCreateTopic() {
     document.getElementById('createTopicForm').reset();
@@ -215,7 +197,6 @@ async function openCreateTopic() {
         deptSelect.value = me.departmentId;
     }
 
-    await loadCoAdvisors();
     openCreateModal();
 }
 
@@ -223,7 +204,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const form = document.getElementById('createTopicForm');
     if (!form) return;
 
-    document.getElementById('ctDepartment').addEventListener('change', loadCoAdvisors);
 
     form.addEventListener('submit', async (e) => {
         e.preventDefault();
@@ -238,7 +218,6 @@ document.addEventListener('DOMContentLoaded', () => {
         };
         if (val('ctTitleEn')) payload.titleEn = val('ctTitleEn');
         if (val('ctRequirements')) payload.requirements = val('ctRequirements');
-        if (val('ctCoAdvisor')) payload.coAdvisorId = Number(val('ctCoAdvisor'));
 
         const editId = document.getElementById('ctId').value;
         if ((!editId && !payload.periodId) || !payload.departmentId) {
@@ -247,7 +226,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         if (editId) {
             delete payload.periodId;
-            if (!payload.coAdvisorId) payload.coAdvisorId = null; // bỏ GV đồng hướng dẫn
         }
 
         const { ok, result } = editId
@@ -265,7 +243,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
 // ===================== SỬA ĐỀ TÀI (PUT /api/topics/{id}) =====================
-// TopicUpdateRequest: titleVi, titleEn, description, requirements, maxStudents, departmentId, coAdvisorId
+// TopicUpdateRequest: titleVi, titleEn, description, requirements, maxStudents, departmentId
 
 async function openEditTopic(id) {
     const { ok, result } = await callAPI('/topics/' + id, { method: 'GET' });
@@ -280,8 +258,6 @@ async function openEditTopic(id) {
 
     const deptSelect = document.getElementById('ctDepartment');
     if ([...deptSelect.options].some(o => String(o.value) === String(t.departmentId))) deptSelect.value = t.departmentId;
-    await loadCoAdvisors();
-    document.getElementById('ctCoAdvisor').value = t.coAdvisorId || '';
 
     document.getElementById('ctTitleVi').value = t.titleVi || '';
     document.getElementById('ctTitleEn').value = t.titleEn || '';

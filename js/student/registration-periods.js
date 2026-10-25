@@ -144,7 +144,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 <td style="padding: 10px 12px;">${periodStatusBadge(p.status)}</td>
                 <td style="padding: 10px 12px; text-align: center;">${p.topicCount ?? '-'}</td>
                 <td style="padding: 10px 12px; text-align: center;">${p.groupCount ?? '-'}</td>
-                <td style="padding: 10px 12px;"><a class="btn btn-primary btn-sm" href="topics.html?periodId=${encodeURIComponent(p.id)}">Xem đề tài</a><button type="button" class="btn btn-ghost btn-sm" onclick="showPeriodDetail(${p.id})">Chi tiết</button></td>
+                <td style="padding: 10px 12px;"><a class="btn btn-primary btn-sm" href="topics.html?periodId=${encodeURIComponent(p.id)}">Xem đề tài</a><button type="button" class="btn btn-action-view btn-sm" onclick="showPeriodDetail(${p.id})">Chi tiết</button></td>
             </tr>`).join('')
             : '<tr><td colspan="100%" class="text-center py-4">Chưa có dữ liệu</td></tr>';
         countEl.textContent = `Hiển thị ${list.length} / ${getServerPagination(tbody)?.totalElements ?? list.length} đợt đăng ký`;

@@ -267,7 +267,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                     <td style="padding:10px 12px;">${escapeHtml(m.studentEmail || '-')}</td>
                     <td style="padding:10px 12px;">${escapeHtml(m.studentClass || '-')}</td>
                     <td style="padding:10px 12px; text-align:right;">
-                        ${removable ? `<button type="button" class="btn btn-secondary btn-sm" data-remove="${memberId(m)}">Xóa</button>` : ''}
+                        ${removable ? `<button type="button" class="btn btn-action-delete btn-sm" data-remove="${memberId(m)}">Xóa</button>` : ''}
                     </td>
                 </tr>`;
         }).join('') : '<tr><td colspan="100%" class="text-center py-4">Chưa có dữ liệu</td></tr>';

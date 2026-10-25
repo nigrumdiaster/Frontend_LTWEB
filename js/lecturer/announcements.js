@@ -112,7 +112,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                     ${a.authorName ? 'Đăng bởi ' + escapeHtml(a.authorName) + ' · ' : ''}Đối tượng: ${escapeHtml(targetLabel(a))}${a.fileUrl ? ' · 📎 Có tệp đính kèm' : ''}
                 </p>
                 <p style="margin:0 0 12px; color:#475569; font-size:14px;">${escapeHtml(preview(a.content, 180))}</p>
-                <button type="button" class="btn btn-secondary btn-sm" onclick="showAnnouncement(${a.id})">Xem chi tiết</button>
+                <button type="button" class="btn btn-action-view btn-sm" onclick="showAnnouncement(${a.id})">Xem chi tiết</button>
             </div>`).join('');
     }
 

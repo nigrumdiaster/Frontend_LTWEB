@@ -31,9 +31,6 @@
 .period-dates strong { font-size: 12px; color: #334155; font-weight: 600; }
 .catalogue-stage { font-size: 11px; color: #475569; }
 .catalogue-actions { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-top: auto; }
-.catalogue-actions .btn { font-size: 12px; text-decoration: none; display: inline-flex; align-items: center; justify-content: center; gap: 14px; }
-.catalogue-page .btn-primary { background: #087f72; border-color: #087f72; color: white; }
-.catalogue-page .btn-primary:hover { background: #06685e; }
 .catalogue-panel { background: white; border: 1px solid #e2e8f0; border-radius: 16px; padding: 20px; }
 .catalogue-filters { display: grid; grid-template-columns: minmax(150px, 1fr) minmax(150px, 1fr) minmax(200px, 1.5fr) auto; gap: 12px; align-items: end; }
 .catalogue-filters label { display: block; font-size: 12px; color: #475569; margin-bottom: 7px; font-weight: 500; }
@@ -70,7 +67,7 @@
 .catalogue-context .period-progress { margin-top: 12px; max-width: 700px; }
 .catalogue-hint { font-size: 12px; color: #64748b; line-height: 1.7; margin-top: 16px; }
 .catalogue-modal-link { margin-right: auto; }
-.catalogue-page :is(button, a, input):focus-visible { outline: 3px solid #087f7266; outline-offset: 3px; }
+.catalogue-page :is(button, a, input):focus-visible { outline: 3px solid #2563eb; outline-offset: 3px; }
 @media (min-width: 1600px) { .catalogue-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
 @media (max-width: 1200px) { .catalogue-filters { grid-template-columns: 1fr 1fr; } .catalogue-filter-actions { align-self: end; } }
 @media (max-width: 650px) {

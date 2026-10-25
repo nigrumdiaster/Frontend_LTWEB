@@ -4,6 +4,7 @@
 .swal2-popup { max-width: calc(100vw - 24px); }
 .swal2-html-container { overflow-wrap: anywhere; white-space: pre-line; }
 .swal2-actions button { min-height: 44px; }
+.swal2-actions { gap: 10px; }
 .sidebar { overflow-y: auto; overscroll-behavior: contain; }
 .main-wrapper { min-width: 0; }
 .main-wrapper > *, .page-title, .form-group, .filter-group { min-width: 0; }

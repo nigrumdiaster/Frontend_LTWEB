@@ -58,8 +58,7 @@ async function showTopicDetail(id) {
             wide('Tên đề tài (Tiếng Anh)', escapeHtml(t.titleEn || '-')),
             wide('Mô tả đề tài', escapeHtml(t.description || '-')),
             wide('Yêu cầu thực hiện', escapeHtml(t.requirements || '-')),
-            field('GV hướng dẫn chính', advisor(t.primaryAdvisorName, t.primaryAdvisorEmail)),
-            field('GV đồng hướng dẫn', advisor(t.coAdvisorName, t.coAdvisorEmail)),
+            field('Giảng viên hướng dẫn', advisor(t.primaryAdvisorName, t.primaryAdvisorEmail)),
             field('Bộ môn', escapeHtml(t.departmentName || '-')),
             field('Đợt đăng ký', escapeHtml(t.periodName || '-')),
             field('Số sinh viên tối đa', t.maxStudents ?? '-'),
@@ -97,13 +96,13 @@ document.addEventListener('DOMContentLoaded', () => {
                     <td style="padding: 10px 12px;">${i + 1}</td>
                     <td style="padding: 10px 12px; font-weight: 600; color: #1e40af;">${escapeHtml(t.code)}</td>
                     <td style="padding: 10px 12px; min-width: 240px; font-weight: 500;">${escapeHtml(t.titleVi)}</td>
-                    <td style="padding: 10px 12px;">${escapeHtml(t.primaryAdvisorName || '-')}${t.coAdvisorName ? '<br><small style="color:#64748b;">+ ' + escapeHtml(t.coAdvisorName) + '</small>' : ''}</td>
+                    <td style="padding: 10px 12px;">${escapeHtml(t.primaryAdvisorName || '-')}</td>
                     <td style="padding: 10px 12px;">${escapeHtml(t.departmentName || '-')}</td>
                     <td style="padding: 10px 12px;">${escapeHtml(t.periodName || '-')}</td>
                     <td style="padding: 10px 12px; text-align: center;">${t.maxStudents ?? '-'}</td>
                     <td style="padding: 10px 12px;">${topicGroupText(t)}</td>
                     <td style="padding: 10px 12px; white-space: nowrap; text-align: center;">
-                        <button type="button" class="btn btn-secondary btn-sm" onclick="showTopicDetail(${t.id})">Chi tiết</button>
+                        <button type="button" class="btn btn-action-view btn-sm" onclick="showTopicDetail(${t.id})">Chi tiết</button>
                     </td>
                 </tr>`).join('')
                 : '<tr><td colspan="9" class="text-center py-4" style="padding: 24px; text-align: center; color: #64748b;">Không tìm thấy đề tài nào phù hợp.</td></tr>';

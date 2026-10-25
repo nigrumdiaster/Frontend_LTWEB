@@ -5,9 +5,8 @@ const path = require('node:path');
 const vm = require('node:vm');
 const source = fs.readFileSync(path.join(__dirname, '../js/admin/topics.js'), 'utf8');
 
-for (const [selection, expected] of [['', null], ['42', 42]]) {
-    test(`admin topic update sends coAdvisorId=${expected}`, async () => {
-        const fields = { editTopicId: '7', editDepartmentId: '2', editCoAdvisorId: selection, editTitleVi: 'Updated approved topic', editTitleEn: '', editMaxStudents: '3', editDescription: 'Description', editRequirements: '' };
+    test(`admin topic update omits the retired co-advisor field`, async () => {
+        const fields = { editTopicId: '7', editDepartmentId: '2', editTitleVi: 'Updated approved topic', editTitleEn: '', editMaxStudents: '3', editDescription: 'Description', editRequirements: '' };
         let sent;
         const context = { document: { addEventListener() {}, getElementById: id => ({ value: fields[id], style: {} }) }, window: {},
             localStorage: { getItem: () => 'token' }, showAlert: async () => {},
@@ -17,9 +16,8 @@ for (const [selection, expected] of [['', null], ['42', 42]]) {
         await context.handleEditTopic({ preventDefault() {} });
         assert.equal(sent.url, '/topics/7');
         assert.equal(sent.options.method, 'PUT');
-        assert.equal(JSON.parse(sent.options.body).coAdvisorId, expected);
+        assert.equal(Object.hasOwn(JSON.parse(sent.options.body), 'coAdvisorId'), false);
     });
-}
 
 test('assigned approved topic retains edit action and explains protected actions', () => {
     const tbody = { innerHTML: '' };
@@ -29,7 +27,7 @@ test('assigned approved topic retains edit action and explains protected actions
     context.renderTopicsTable([{ id: 7, approvalStatus: 'APPROVED', isAssigned: true }]);
     assert.match(tbody.innerHTML, /onclick="openEditTopicModal\(7\)" class="btn btn-sm btn-action-edit">Sửa/);
     assert.match(tbody.innerHTML, /onclick="deleteTopic\(7\)" class="btn btn-sm btn-action-delete">Xóa/);
-    assert.match(tbody.innerHTML, /onclick="openApprovalModal\(7\)" class="btn btn-sm btn-primary">/);
+    assert.match(tbody.innerHTML, /onclick="openApprovalModal\(7\)" class="btn btn-sm btn-secondary">/);
 });
 
 for (const confirmed of [false, true]) {

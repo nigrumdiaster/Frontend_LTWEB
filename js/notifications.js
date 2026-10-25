@@ -7,8 +7,11 @@
             heightAuto: false,
             confirmButtonText: 'Đồng ý',
             cancelButtonText: 'Hủy',
-            confirmButtonColor: '#0f172a',
-            cancelButtonColor: '#64748b',
+            buttonsStyling: false,
+            customClass: {
+                confirmButton: 'btn btn-primary',
+                cancelButton: 'btn btn-secondary'
+            },
             ...options
         }));
         pending = result.catch(() => {});

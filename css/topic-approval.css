@@ -1,0 +1,62 @@
+#approvalModal .approval-choices {
+    border: 0;
+    padding: 0;
+    margin: 0;
+    min-width: 0;
+}
+
+#approvalModal .approval-choices legend {
+    margin-bottom: 10px;
+    font-size: 12px;
+    font-weight: 600;
+    color: #475569;
+}
+
+#approvalModal .approval-choice {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 13px 14px;
+    margin-bottom: 8px;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    background: #fff;
+    cursor: pointer;
+    text-transform: none;
+    letter-spacing: normal;
+    transition: border-color .15s, background-color .15s;
+}
+
+#approvalModal .approval-choice input {
+    width: 17px;
+    height: 17px;
+    margin: 0;
+    padding: 0;
+    flex-shrink: 0;
+    accent-color: #2563eb;
+}
+
+#approvalModal .approval-choice strong {
+    display: block;
+    color: #0f172a;
+    font-size: 14px;
+    font-weight: 600;
+}
+
+#approvalModal .approval-choice small {
+    display: block;
+    margin-top: 4px;
+    color: #64748b;
+    font-size: 12px;
+    font-weight: 400;
+    line-height: 1.5;
+}
+
+#approvalModal .approval-choice:hover { border-color: #94a3b8; }
+#approvalModal .approval-choice:has(:checked) { border-color: #2563eb; background: #eff6ff; }
+#approvalModal .approval-choice-approved:has(:checked) { border-color: #059669; background: #ecfdf5; }
+#approvalModal .approval-choice-approved input { accent-color: #059669; }
+#approvalModal .approval-choice-rejected:has(:checked) { border-color: #dc2626; background: #fef2f2; }
+#approvalModal .approval-choice-rejected input { accent-color: #dc2626; }
+#approvalModal .approval-choice:has(:focus-visible) { outline: 2px solid #2563eb; outline-offset: 3px; }
+#approvalModal .approval-choice:has(:disabled) { opacity: .55; cursor: not-allowed; }

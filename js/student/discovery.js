@@ -36,7 +36,7 @@ const StudentDiscovery = (() => {
             ${progress(p)}
             <div class="period-dates"><div><span>Mở đăng ký sinh viên</span><strong>${escapeText(date(p.studentRegStart))}</strong></div><div><span>Hạn đăng ký</span><strong>${escapeText(date(p.studentRegEnd))}</strong></div></div>
             <div class="catalogue-card-bottom"><span class="catalogue-muted">${escapeText(p.topicCount ?? '—')} đề tài · ${escapeText(p.groupCount ?? '—')} nhóm</span><span class="catalogue-stage">${escapeText(statuses[p.status] || p.status || '')}</span></div>
-            <div class="catalogue-actions"><a class="btn ${state.open ? 'btn-primary' : 'btn-secondary'}" href="topics.html?periodId=${encodeURIComponent(p.id)}">Xem đề tài <span aria-hidden="true">→</span></a><button class="btn btn-ghost" type="button" onclick="showPeriodDetail(${Number(p.id)})">Lịch chi tiết</button></div>
+            <div class="catalogue-actions"><a class="btn ${state.open ? 'btn-primary' : 'btn-secondary'}" href="topics.html?periodId=${encodeURIComponent(p.id)}">Xem đề tài <span aria-hidden="true">→</span></a><button class="btn btn-action-view" type="button" onclick="showPeriodDetail(${Number(p.id)})">Lịch chi tiết</button></div>
         </article>`;
     }
     function empty(message) { return `<div class="catalogue-empty"><span aria-hidden="true">⌕</span><p>${escapeText(message)}</p></div>`; }

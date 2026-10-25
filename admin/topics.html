@@ -4,8 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Quản Lý Đề Tài - FIT Topic Manager</title>
-    <link rel="stylesheet" href="../css/style.css?v=4">
+    <link rel="stylesheet" href="../css/style.css?v=5">
     <link rel="stylesheet" href="../css/responsive.css">
+    <link rel="stylesheet" href="../css/topic-approval.css">
     <link rel="stylesheet" href="../js/vendor/sweetalert2/sweetalert2.min.css">
 </head>
 <body>
@@ -161,13 +162,7 @@
                 <div class="form-row">
                     <div class="form-group">
                         <label>Số SV tối đa (*)</label>
-                        <input type="number" id="createMaxStudents" min="1" max="5" required>
-                    </div>
-                    <div class="form-group">
-                        <label>GV đồng hướng dẫn (Nếu có)</label>
-                        <select id="createCoAdvisorId" class="form-control">
-                            <option value="">Không có giảng viên đồng hướng dẫn</option>
-                        </select>
+                        <input type="number" id="createMaxStudents" min="3" max="5" required>
                     </div>
                 </div>
 
@@ -217,15 +212,8 @@
                     </div>
                     <div class="form-group">
                         <label>Số SV tối đa (*)</label>
-                        <input type="number" id="editMaxStudents" min="1" max="5" required>
+                        <input type="number" id="editMaxStudents" min="3" max="5" required>
                     </div>
-                </div>
-
-                <div class="form-group">
-                    <label>GV đồng hướng dẫn</label>
-                    <select id="editCoAdvisorId" class="form-control">
-                        <option value="">Không có giảng viên đồng hướng dẫn</option>
-                    </select>
                 </div>
 
                 <div class="form-group">
@@ -257,12 +245,26 @@
                 <p id="approvalStatusHint" role="status" style="font-size: 13px; color: #64748b; line-height: 1.6; margin-bottom: 16px;"></p>
 
                 <div class="form-group" style="margin-bottom: 16px;">
-                    <label>Quyết định phê duyệt (*)</label>
-                    <select id="approvalStatusSelect" onchange="toggleRejectionReason()" required>
-                        <option value="APPROVED">Đồng Ý / Phê Duyệt (APPROVED)</option>
-                        <option value="REJECTED">Từ Chối Đề Tài (REJECTED)</option>
-                        <option value="PENDING">Chờ Xem Xét Lại (PENDING)</option>
+                    <select id="approvalStatusSelect" data-native-select hidden aria-hidden="true" tabindex="-1">
+                        <option value="APPROVED">Phê duyệt</option>
+                        <option value="REJECTED">Từ chối</option>
+                        <option value="PENDING">Chờ duyệt</option>
                     </select>
+                    <fieldset class="approval-choices">
+                        <legend>Quyết định phê duyệt <span aria-hidden="true">*</span></legend>
+                        <label class="approval-choice approval-choice-approved">
+                            <input type="radio" name="topicApprovalStatus" value="APPROVED" required onchange="selectApprovalStatus(this.value)">
+                            <span><strong>Phê duyệt</strong><small>Cho phép sinh viên đăng ký đề tài.</small></span>
+                        </label>
+                        <label class="approval-choice approval-choice-pending">
+                            <input type="radio" name="topicApprovalStatus" value="PENDING" onchange="selectApprovalStatus(this.value)">
+                            <span><strong>Chờ duyệt</strong><small>Giữ đề tài để xem xét thêm.</small></span>
+                        </label>
+                        <label class="approval-choice approval-choice-rejected">
+                            <input type="radio" name="topicApprovalStatus" value="REJECTED" onchange="selectApprovalStatus(this.value)">
+                            <span><strong>Từ chối</strong><small>Cần ghi rõ lý do bên dưới.</small></span>
+                        </label>
+                    </fieldset>
                 </div>
 
                 <div class="form-group" id="rejectionReasonGroup" style="display: none; margin-bottom: 20px;">

@@ -47,7 +47,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 </tr>`).join('');
 
             const topics = (c.assignedTopics || []).map(a => {
-                const ownTopic = me && (String(a.primaryAdvisorId) === String(me.id) || String(a.coAdvisorId) === String(me.id));
+                const ownTopic = me && (String(a.primaryAdvisorId) === String(me.id));
                 const actions = [];
                 if (mem && !ownTopic) actions.push(`<button type="button" class="btn btn-primary btn-sm" onclick="gradeCouncil(${c.id}, ${a.topicId})">Chấm điểm</button>`);
                 if (amChair && !ownTopic) actions.push(`<button type="button" class="btn btn-secondary btn-sm" onclick="finalizeTopic(${c.id}, ${a.topicId})">Chốt kết quả</button>`);
@@ -56,7 +56,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 <tr style="border-top:1px solid #f1f5f9;">
                     <td style="padding:8px 12px; font-weight:600;">${escapeHtml(a.topicCode || '')}</td>
                     <td style="padding:8px 12px; min-width:220px;">${escapeHtml(a.topicTitleVi || '')}${ownTopic ? '<br><small style="color:#b45309;">Đề tài bạn hướng dẫn (không được chấm)</small>' : ''}</td>
-                    <td style="padding:8px 12px;">${escapeHtml(a.primaryAdvisorName || '-')}${a.coAdvisorName ? '<br><small style="color:#64748b;">+ ' + escapeHtml(a.coAdvisorName) + '</small>' : ''}</td>
+                    <td style="padding:8px 12px;">${escapeHtml(a.primaryAdvisorName || '-')}</td>
                     <td style="padding:8px 12px;">${escapeHtml(a.studentGroupName || '-')}</td>
                     <td style="padding:8px 12px;">${escapeHtml(fmtAnyDate(a.defenseTime))}</td>
                     <td style="padding:8px 12px; white-space:nowrap;">${actions.join(' ')}</td>

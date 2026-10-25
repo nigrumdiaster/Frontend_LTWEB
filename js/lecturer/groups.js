@@ -8,7 +8,7 @@ function isMyGroup(g) {
     const me = getMe();
     const t = g.topic || {};
     if (!me) return false;
-    return String(t.primaryAdvisorId) === String(me.id) || String(t.coAdvisorId) === String(me.id);
+    return String(t.primaryAdvisorId) === String(me.id);
 }
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -65,7 +65,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         <div style="font-size:14px; color:#64748b;">${(g.members || []).length} thành viên</div>
                     </div>
                     <p style="margin:12px 0 0; font-size:14px;"><span style="color:#64748b;">Đề tài:</span> <strong>${escapeHtml(t.code ? t.code + ' - ' : '')}${escapeHtml(g.topicTitleVi || t.titleVi || 'Chưa đăng ký')}</strong>
-                        ${t.primaryAdvisorName ? '<br><span style="color:#64748b;">GVHD:</span> ' + escapeHtml(t.primaryAdvisorName) + (t.coAdvisorName ? ' + ' + escapeHtml(t.coAdvisorName) : '') : ''}</p>
+                        ${t.primaryAdvisorName ? '<br><span style="color:#64748b;">GVHD:</span> ' + escapeHtml(t.primaryAdvisorName) : ''}</p>
                     <div style="overflow-x:auto; margin-top:12px;">
                         <table style="width:100%; border-collapse:collapse; font-size:14px;">
                             <thead><tr style="background:#f1f5f9; text-align:left; color:#475569;">

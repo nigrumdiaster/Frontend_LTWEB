@@ -81,17 +81,22 @@ body {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    height: 40px;
+    min-height: 42px;
     padding: 0 16px;
     font-size: 13px;
     font-weight: 600;
     border-radius: var(--radius-md);
     border: 1px solid transparent;
     cursor: pointer;
-    transition: all 0.15s ease;
+    transition: background-color .15s ease, border-color .15s ease, box-shadow .15s ease;
     text-decoration: none;
     gap: 6px;
     white-space: nowrap;
+    line-height: 1.4;
+    vertical-align: middle;
+    appearance: none;
+    background: transparent;
+    color: var(--text-heading);
 }
 
 .btn-primary {
@@ -99,28 +104,23 @@ body {
     color: #ffffff;
     border: 1px solid #1e293b;
     border-radius: 8px;
-    padding: 10px 18px;
     font-weight: 600;
     box-shadow: none;
-    transition: background-color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
 }
-.btn-primary:hover {
+.btn-primary:hover:not(:disabled):not([aria-disabled="true"]) {
     background-color: #1e293b;
-    transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(15, 23, 42, 0.2);
 }
 
 .btn-secondary {
     background-color: #f1f5f9;
     color: #0f172a;
-    border: 1.5px solid #cbd5e1;
+    border: 1px solid #cbd5e1;
     border-radius: 8px;
-    padding: 9px 16px;
-    font-weight: 500;
+    font-weight: 600;
     box-shadow: none;
     transition: background-color 0.2s ease, border-color 0.2s ease;
 }
-.btn-secondary:hover {
+.btn-secondary:hover:not(:disabled):not([aria-disabled="true"]) {
     background-color: #e2e8f0;
     border-color: #94a3b8;
 }
@@ -128,16 +128,14 @@ body {
 .btn-ghost {
     background-color: transparent;
     color: #0f172a;
-    padding: 0 8px;
-    height: 32px;
-    font-weight: 500;
+    font-weight: 600;
 }
-.btn-ghost:hover {
+.btn-ghost:hover:not(:disabled):not([aria-disabled="true"]) {
     background-color: #f1f5f9;
 }
 
 .btn-sm {
-    height: 30px;
+    min-height: 32px;
     padding: 0 10px;
     font-size: 12px;
     border-radius: var(--radius-sm);
@@ -146,22 +144,47 @@ body {
 .btn-action-edit {
     background-color: #fffbeb;
     color: #b45309;
+    border-color: #fde68a;
 }
-.btn-action-edit:hover { background-color: #fef3c7; }
+.btn-action-edit:hover:not(:disabled):not([aria-disabled="true"]) { background-color: #fef3c7; }
 
 .btn-action-delete {
     background-color: #fef2f2;
     color: #b91c1c;
+    border-color: #fecaca;
 }
-.btn-action-delete:hover { background-color: #fee2e2; }
+.btn-action-delete:hover:not(:disabled):not([aria-disabled="true"]) { background-color: #fee2e2; }
 
 .btn-action-view {
-    background-color: #f0fdf4;
-    color: #15803d;
+    background-color: #eff6ff;
+    color: #1d4ed8;
+    border-color: #bfdbfe;
 }
 
-.btn-action-view:hover {
-    background-color: #dcfce7;
+.btn-action-view:hover:not(:disabled):not([aria-disabled="true"]) {
+    background-color: #dbeafe;
+}
+
+.btn:focus-visible {
+    outline: 3px solid #2563eb;
+    outline-offset: 3px;
+}
+
+.btn:disabled, .btn[aria-disabled="true"] {
+    opacity: .5;
+    cursor: not-allowed;
+    box-shadow: none;
+    transform: none;
+}
+
+.btn-icon {
+    width: 42px;
+    padding: 0;
+    flex-shrink: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .btn { transition: none; }
 }
 
 /* ==========================================
@@ -241,6 +264,12 @@ body {
     padding: 0 20px !important;
     white-space: nowrap;
     align-self: flex-end;
+}
+
+.filter-bar .btn,
+.filter-section .btn,
+.filter-card .btn {
+    font-size: 13px;
 }
 
 .form-group {

@@ -90,7 +90,7 @@ function fmtAnyDate(value) {
 function isMyTopic(t) {
     const me = getMe();
     if (!me) return false;
-    return String(t.primaryAdvisorId) === String(me.id) || String(t.coAdvisorId) === String(me.id);
+    return String(t.primaryAdvisorId) === String(me.id);
 }
 
 function isChairman(role) { return /CHAIR/i.test(String(role || '')); }

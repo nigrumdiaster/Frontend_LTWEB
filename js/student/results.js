@@ -7,7 +7,6 @@
 
 const GRADER_ROLE_LABELS = {
     ADVISOR: 'GVHD',
-    CO_ADVISOR: 'GVHD phụ',
     COUNCIL_CHAIRMAN: 'Chủ tịch hội đồng',
     COUNCIL_SECRETARY: 'Thư ký hội đồng',
     REVIEWER: 'GVPB',
