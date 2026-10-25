@@ -7,6 +7,9 @@
 
 const GRADER_ROLE_LABELS = {
     ADVISOR: 'GVHD',
+    CO_ADVISOR: 'GVHD phụ',
+    COUNCIL_CHAIRMAN: 'Chủ tịch hội đồng',
+    COUNCIL_SECRETARY: 'Thư ký hội đồng',
     REVIEWER: 'GVPB',
     COUNCIL_MEMBER: 'Thành viên hội đồng',
     COUNCIL: 'Hội đồng',
@@ -36,6 +39,9 @@ function fmtDateTime(value) {
 document.addEventListener('DOMContentLoaded', async () => {
     const area = document.getElementById('resultArea');
     const errorEl = document.getElementById('resultLoadError');
+    const periodSelect = document.getElementById('resultPeriodSelect');
+    let requestVersion = 0;
+    let refreshing = false;
 
     if (!localStorage.getItem('token')) {
         await showAlert('Bạn chưa đăng nhập!');
@@ -135,14 +141,21 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     async function loadResults() {
+        const periodId = periodSelect.value;
+        const version = ++requestVersion;
         showError('');
+        if (!periodId) {
+            renderEmpty('Bạn chưa đăng ký đề tài trong đợt nào.');
+            return;
+        }
         area.innerHTML = `<div style="${card} color:#64748b;">Đang tải...</div>`;
         try {
-            const response = await apiFetch('/results/student/my-results', {
+            const response = await apiFetch('/results/student/my-results?periodId=' + encodeURIComponent(periodId), {
                 method: 'GET',
                 headers: { 'Content-Type': 'application/json' }
             });
             const result = await response.json();
+            if (version !== requestVersion) return;
 
             if (response.status === 403) {
                 area.innerHTML = '';
@@ -161,12 +174,47 @@ document.addEventListener('DOMContentLoaded', async () => {
             if (!list.length) { renderEmpty(); return; }
             area.innerHTML = list.map(renderResult).join('');
         } catch (error) {
+            if (version !== requestVersion) return;
             console.error('Lỗi tải kết quả:', error);
             area.innerHTML = '';
             showError(error.message || 'Lỗi kết nối máy chủ!');
         }
     }
 
-    document.getElementById('btnReloadResults').addEventListener('click', loadResults);
-    loadResults();
+    async function refreshPeriodsAndResults() {
+        if (refreshing) return;
+        refreshing = true;
+        document.getElementById('btnReloadResults').disabled = true;
+        ++requestVersion;
+        periodSelect.disabled = true;
+        showError('');
+        try {
+            const response = await apiFetch('/results/student/periods', { method: 'GET' });
+            const result = await response.json();
+            if (!response.ok || result.success === false) {
+                throw new Error(result.message || 'Không thể tải các đợt đã đăng ký.');
+            }
+            const periods = Array.isArray(result.data) ? result.data : [];
+            const previous = periodSelect.value;
+            periodSelect.replaceChildren(...periods.map(period => new Option(period.name, String(period.id))));
+            if (!periods.length) {
+                periodSelect.replaceChildren(new Option('Chưa đăng ký đề tài trong đợt nào', ''));
+            } else {
+                periodSelect.disabled = false;
+                periodSelect.value = periods.some(p => String(p.id) === previous) ? previous : String(periods[0].id);
+            }
+            await loadResults();
+        } catch (error) {
+            periodSelect.replaceChildren(new Option('Không tải được đợt đăng ký', ''));
+            area.innerHTML = '';
+            showError(error.message || 'Không thể tải các đợt đã đăng ký.');
+        } finally {
+            refreshing = false;
+            document.getElementById('btnReloadResults').disabled = false;
+        }
+    }
+
+    periodSelect.addEventListener('change', loadResults);
+    document.getElementById('btnReloadResults').addEventListener('click', refreshPeriodsAndResults);
+    await refreshPeriodsAndResults();
 });

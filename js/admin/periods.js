@@ -93,9 +93,12 @@ async function loadRegistrationPeriods() {
 }
 
 const periodDeleteLabels = new Map();
+const periodTypes = new Map();
 
 function renderRegistrationPeriodsTable(periods) {
     periodDeleteLabels.clear();
+    periodTypes.clear();
+    (periods || []).forEach(period => periodTypes.set(String(period.id), period.type));
     (periods || []).forEach(period => periodDeleteLabels.set(String(period.id), period.name));
     const tbody = document.getElementById('periodTableBody');
     if (!tbody) return;
@@ -271,7 +274,20 @@ function openStatusModal(id, currentStatus) {
     currentPeriodStatus = currentStatus;
     document.getElementById('statusPeriodId').value = id;
     const select = document.getElementById('updateStatusSelect');
-    [...select.options].forEach(option => { option.disabled = !option.value || option.value === currentStatus; });
+    const nextStatuses = {
+        DRAFT: 'PHASE1_LECTURER_REGISTRATION',
+        PHASE1_LECTURER_REGISTRATION: 'PHASE1_REVIEWING',
+        PHASE1_REVIEWING: 'PHASE2_STUDENT_REGISTRATION',
+        PHASE2_STUDENT_REGISTRATION: 'IN_PROGRESS',
+        IN_PROGRESS: 'REVIEWING',
+        REVIEWING: periodTypes.get(String(id)) === 'GRADUATION_THESIS' ? 'DEFENSE' : 'COMPLETED',
+        DEFENSE: 'COMPLETED'
+    };
+    const terminal = currentStatus === 'COMPLETED' || currentStatus === 'CANCELLED';
+    [...select.options].forEach(option => {
+        option.disabled = terminal || !option.value
+            || (option.value !== nextStatuses[currentStatus] && option.value !== 'CANCELLED');
+    });
     document.getElementById('currentPeriodStatus').textContent = [...select.options].find(option => option.value === currentStatus)?.textContent || currentStatus;
     document.getElementById('statusPeriodName').textContent = periodDeleteLabels.get(String(id)) || 'Đợt đăng ký';
     select.value = '';
@@ -286,7 +302,7 @@ function updateStatusChoice() {
     document.getElementById('saveStatusButton').disabled = savingPeriodStatus || !changed;
     document.getElementById('statusChangeHint').textContent = changed
         ? `Sẽ chuyển sang: ${select.selectedOptions[0].textContent}.`
-        : 'Chọn một trạng thái khác để cập nhật.';
+        : 'Chọn giai đoạn tiếp theo hoặc hủy đợt. Đợt đã kết thúc không thể mở lại.';
 }
 
 async function handleUpdateStatus(e) {
