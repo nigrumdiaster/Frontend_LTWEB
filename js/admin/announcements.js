@@ -115,6 +115,7 @@ function setAnnouncementTableMessage(message, isError = false) {
 function openCreateAnnouncement() {
     document.getElementById('announcementForm').reset();
     document.getElementById('announcementId').value = '';
+    document.getElementById('announcementEmailOption').hidden = false;
     document.getElementById('announcementModalTitle').textContent = 'Đăng thông báo mới';
     document.getElementById('announcementModal').style.display = 'flex';
 }
@@ -124,6 +125,7 @@ async function openEditAnnouncement(id) {
         const result = await requestAnnouncementApi(`/api/announcements/${encodeURIComponent(id)}`);
         const announcement = result.data;
         document.getElementById('announcementId').value = announcement.id;
+        document.getElementById('announcementEmailOption').hidden = true;
         document.getElementById('announcementTitle').value = announcement.title || '';
         document.getElementById('announcementContent').value = announcement.content || '';
         document.getElementById('announcementTargetRole').value = announcement.targetRole || 'ALL';
@@ -146,7 +148,8 @@ async function saveAnnouncement(event) {
         content: document.getElementById('announcementContent').value,
         targetRole: targetRole === 'ALL' ? null : targetRole,
         isPinned: document.getElementById('announcementIsPinned').checked,
-        fileUrl: document.getElementById('announcementFileUrl').value.trim()
+        fileUrl: document.getElementById('announcementFileUrl').value.trim(),
+        sendEmail: !id && document.getElementById('announcementSendEmail').checked
     };
 
     try {
