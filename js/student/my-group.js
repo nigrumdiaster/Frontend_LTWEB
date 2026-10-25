@@ -10,7 +10,8 @@
 //   GET    /api/topics/published?periodId=            đề tài để đăng ký
 //   GET    /api/registration-periods                  danh sách đợt
 
-const MAX_GROUP_MEMBERS = 3;
+const MIN_GROUP_MEMBERS = 3;
+const MAX_GROUP_MEMBERS = 5;
 
 let me = null;
 let currentGroup = null;
@@ -366,6 +367,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     async function registerTopic() {
+        if (!(await validateGroupSize())) return;
         const topicId = Number(document.getElementById('topicPick').value);
         if (!(await confirmAction('Xác nhận đăng ký đề tài này cho nhóm?'))) return;
         const { ok, result } = await callAPI(`/groups/${currentGroup.id}/register-topic`, { method: 'POST', body: { topicId } });
@@ -395,7 +397,17 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     // ---------- Nộp báo cáo ----------
+    async function validateGroupSize() {
+        const count = getMembers(currentGroup).length;
+        if (count < MIN_GROUP_MEMBERS || count > MAX_GROUP_MEMBERS) {
+            await showAlert('Nhóm phải có từ 3 đến 5 sinh viên để đăng ký đề tài hoặc nộp báo cáo!');
+            return false;
+        }
+        return true;
+    }
+
     async function submitReport() {
+        if (!(await validateGroupSize())) return;
         const reportUrl = document.getElementById('reportUrl').value.trim();
         const reportNote = document.getElementById('reportNote').value.trim();
         if (!reportUrl) { await showAlert('Vui lòng nhập link báo cáo!'); return; }
