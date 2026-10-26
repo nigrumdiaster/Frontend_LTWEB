@@ -105,8 +105,9 @@ async function loadRegisterDepartments() {
 // Trang đích sau khi đăng nhập theo vai trò
 function getHomePageByRole(role) {
     if (role === 'ROLE_STUDENT') return 'student/profile.html';
-    if (role === 'ROLE_LECTURER') return 'lecturer/profile.html';
-    return 'admin/profile.html';
+    if (role === 'ROLE_LECTURER' || role === 'ROLE_DEPARTMENT_HEAD') return 'lecturer/profile.html';
+    if (role === 'ROLE_ADMIN' || role === 'ROLE_DEAN') return 'admin/profile.html';
+    return 'index.html';
 }
 
 // ==========================================

@@ -20,6 +20,33 @@ function isInPortalFolder() {
     return PORTAL_FOLDERS.some(folder => window.location.pathname.includes(folder));
 }
 
+// Every admin page loads config.js, including pages that do not load auth.js.
+// Verify the backend role before allowing any requests from this portal.
+const adminAccess = window.location.pathname.includes('/admin/')
+    ? verifyAdminAccess()
+    : Promise.resolve(true);
+
+async function verifyAdminAccess() {
+    const token = localStorage.getItem('token');
+    try {
+        if (!token) throw new Error('Missing session');
+        const response = await fetch(`${API_BASE_URL}/auth/me`, {
+            headers: { Authorization: `Bearer ${token}` }, cache: 'no-store'
+        });
+        const result = await response.json();
+        if (!response.ok || !result.success || !result.data) throw new Error('Invalid session');
+        const user = result.data;
+        localStorage.setItem('user', JSON.stringify(user));
+        if (['ROLE_ADMIN', 'ROLE_DEAN'].includes(user.role)) return true;
+        const portal = user.role === 'ROLE_STUDENT' ? 'student'
+            : ['ROLE_LECTURER', 'ROLE_DEPARTMENT_HEAD'].includes(user.role) ? 'lecturer' : null;
+        window.location.replace(portal ? `../${portal}/profile.html` : '../index.html');
+    } catch {
+        window.location.replace('../index.html');
+    }
+    return false;
+}
+
 function logout() {
     localStorage.removeItem('token');
     localStorage.removeItem('user');
@@ -29,6 +56,11 @@ function logout() {
 
 // One HTTP request. List callers use the DB default (10) unless specified.
 async function apiFetch(endpoint, options = {}) {
+    if (!await adminAccess) {
+        return new Response(JSON.stringify({ success: false, message: 'Bạn không có quyền truy cập trang quản trị.' }), {
+            status: 403, headers: { 'Content-Type': 'application/json' }
+        });
+    }
     const normalizedEndpoint = endpoint.startsWith('/api/')
         ? endpoint.slice(4)
         : endpoint.startsWith('/api')

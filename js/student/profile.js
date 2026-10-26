@@ -23,9 +23,9 @@
 
             const user = result.data;
 
-            // Tài khoản không phải sinh viên thì chuyển sang giao diện admin
+            // Chuyển về đúng cổng theo vai trò đã xác thực từ backend.
             if (user.role !== 'ROLE_STUDENT') {
-                window.location.href = '../admin/profile.html';
+                window.location.replace('../' + getHomePageByRole(user.role));
                 return;
             }
 

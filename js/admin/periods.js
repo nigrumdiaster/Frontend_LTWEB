@@ -281,18 +281,20 @@ function openStatusModal(id, currentStatus) {
     currentPeriodStatus = currentStatus;
     document.getElementById('statusPeriodId').value = id;
     const select = document.getElementById('updateStatusSelect');
+    const isGraduationThesis = periodTypes.get(String(id)) === 'GRADUATION_THESIS';
     const nextStatuses = {
         DRAFT: 'PHASE1_LECTURER_REGISTRATION',
         PHASE1_LECTURER_REGISTRATION: 'PHASE1_REVIEWING',
         PHASE1_REVIEWING: 'PHASE2_STUDENT_REGISTRATION',
         PHASE2_STUDENT_REGISTRATION: 'IN_PROGRESS',
         IN_PROGRESS: 'REVIEWING',
-        REVIEWING: periodTypes.get(String(id)) === 'GRADUATION_THESIS' ? 'DEFENSE' : 'COMPLETED',
+        REVIEWING: isGraduationThesis ? 'DEFENSE' : 'COMPLETED',
         DEFENSE: 'COMPLETED'
     };
     const terminal = currentStatus === 'COMPLETED' || currentStatus === 'CANCELLED';
     [...select.options].forEach(option => {
-        option.disabled = terminal || !option.value
+        option.hidden = option.value === 'DEFENSE' && !isGraduationThesis;
+        option.disabled = option.hidden || terminal || !option.value
             || (option.value !== nextStatuses[currentStatus] && option.value !== 'CANCELLED');
     });
     document.getElementById('currentPeriodStatus').textContent = [...select.options].find(option => option.value === currentStatus)?.textContent || currentStatus;

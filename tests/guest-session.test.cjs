@@ -28,7 +28,7 @@ function setup({token = 'token', status = 200, role = 'ROLE_STUDENT', networkErr
 }
 
 test('verified server role determines destination instead of cached role', async () => {
-    for (const [role, target] of [['ROLE_STUDENT', 'student'], ['ROLE_LECTURER', 'lecturer'], ['ROLE_ADMIN', 'admin'], ['ROLE_DEAN', 'admin'], ['ROLE_DEPARTMENT_HEAD', 'admin']]) {
+    for (const [role, target] of [['ROLE_STUDENT', 'student'], ['ROLE_LECTURER', 'lecturer'], ['ROLE_ADMIN', 'admin'], ['ROLE_DEAN', 'admin'], ['ROLE_DEPARTMENT_HEAD', 'lecturer']]) {
         const app = setup({role});
         assert.equal(await app.check(), true);
         assert.deepEqual(app.redirects, [`${target}/profile.html`]);

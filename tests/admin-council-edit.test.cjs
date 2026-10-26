@@ -33,7 +33,7 @@ function setup() {
     vm.createContext(context);
     vm.runInContext(source, context);
     context.loadCouncils = async () => {};
-    return { context, get, requests, alerts };
+    return { context, get, requests, alerts, council };
 }
 
 test('edit preloads all fields and roles, locks period and sends PUT', async () => {
@@ -106,4 +106,42 @@ test('council deletion requires confirmation and sends DELETE', async () => {
     await context.deleteCouncil(7);
     assert.equal(requests[0].url, '/councils/7');
     assert.equal(requests[0].method, 'DELETE');
+});
+
+test('council table counts the assignedTopics returned by the backend', () => {
+    const { context, get } = setup();
+    context.renderCouncils([{ id: 7, name: 'Council', assignedTopics: [{ topicId: 41 }, { topicId: 42 }] }]);
+    assert.match(get('councilTableBody').innerHTML, /<td>2<\/td>/);
+    context.renderCouncils([{ id: 8, name: 'Empty', assignedTopics: [] }]);
+    assert.match(get('councilTableBody').innerHTML, /<td>0<\/td>/);
+});
+
+test('council details render assignment fields and use topicId for a missing code', async () => {
+    const { context, get, council } = setup();
+    council.assignedTopics = [
+        { id: 901, topicId: 41, topicCode: 'DT041', topicTitleVi: '<Đề tài A>', primaryAdvisorName: 'Advisor', studentGroupName: 'Group A' },
+        { id: 902, topicId: 42, topicTitleVi: 'Đề tài B' }
+    ];
+    await context.viewCouncilDetail(7);
+    const html = get('councilDetailTopicsBody').innerHTML;
+    assert.match(html, /DT041/);
+    assert.match(html, /&lt;Đề tài A&gt;/);
+    assert.match(html, /Advisor/);
+    assert.match(html, /Group A/);
+    assert.match(html, /DT042/);
+    assert.doesNotMatch(html, /DT902|Chưa có dữ liệu/);
+});
+
+test('assignment modal checks existing topic IDs rather than assignment IDs', async () => {
+    const { context, get, council, alerts } = setup();
+    council.assignedTopics = [{ id: 901, topicId: 41 }, { id: 902, topicId: '42' }];
+    context.apiFetchAll = async () => ({ ok: true, json: async () => ({ success: true, data: [
+        { id: 41, titleVi: 'A' }, { id: 42, titleVi: 'B' }, { id: 43, titleVi: 'C' }
+    ] }) });
+    await context.openAssignTopicsModal(7);
+    assert.deepEqual(alerts, []);
+    const html = get('councilTopicsList').innerHTML;
+    assert.match(html, /value="41" checked/);
+    assert.match(html, /value="42" checked/);
+    assert.doesNotMatch(html, /value="43" checked/);
 });

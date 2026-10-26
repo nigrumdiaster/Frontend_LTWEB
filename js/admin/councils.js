@@ -577,7 +577,7 @@ function renderCouncils(councils) {
             <td>${escapeText(council.defenseDate || '-')}</td>
             <td>${escapeText(council.location || '-')}</td>
             <td>${escapeText(council.chairmanName || '-')}</td>
-            <td>${(council.topicIds || []).length}</td>
+            <td>${(council.assignedTopics || []).length}</td>
             <td style="text-align: right; white-space: nowrap;">
                 <button type="button" onclick="viewCouncilDetail(${council.id})" class="btn btn-sm btn-action-view">👁️ Chi tiết</button>
                 <button type="button" onclick="openEditCouncilModal(${council.id})" class="btn btn-sm btn-action-edit">Chỉnh sửa</button>
@@ -786,7 +786,7 @@ async function viewCouncilDetail(councilId) {
         }
 
         const council = result.data;
-        const topics = council.topics || [];
+        const topics = council.assignedTopics || [];
         const members = council.members || [];
         const committeeMembers = members
             .filter(member => member.councilRole === 'MEMBER')
@@ -808,8 +808,8 @@ async function viewCouncilDetail(councilId) {
         document.getElementById('councilDetailTopicsBody').innerHTML = topics.length
             ? topics.map(topic => `
                 <tr>
-                    <td><strong>${escapeText(topic.code || `DT${String(topic.id).padStart(3, '0')}`)}</strong></td>
-                    <td>${escapeText(topic.titleVi || topic.title || '-')}</td>
+                    <td><strong>${escapeText(topic.topicCode || `DT${String(topic.topicId).padStart(3, '0')}`)}</strong></td>
+                    <td>${escapeText(topic.topicTitleVi || '-')}</td>
                     <td>${escapeText(topic.primaryAdvisorName || topic.advisorName || '-')}</td>
                     <td>${escapeText(topic.assignedGroupName || topic.studentGroupName || topic.group?.name || '-')}</td>
                     <td>${escapeText(topic.defenseTime || council.defenseTime || council.defenseDate || '-')}</td>
@@ -844,12 +844,12 @@ async function openAssignTopicsModal(councilId) {
             throw new Error(topicsResult.message || 'Không thể tải danh sách đề tài.');
         }
 
-        const currentIds = new Set(council.topicIds || []);
+        const currentIds = new Set((council.assignedTopics || []).map(assignment => String(assignment.topicId)));
         const topics = topicsResult.data || [];
         const topicsList = document.getElementById('councilTopicsList');
         topicsList.innerHTML = topics.map(topic => `
             <label style="display: flex; align-items: flex-start; gap: 10px; padding: 8px 12px; border-radius: 6px; border: 1px solid #e2e8f0; background: #ffffff; cursor: pointer; margin-bottom: 4px;">
-                <input type="checkbox" name="councilTopicId" value="${topic.id}" ${currentIds.has(topic.id) ? 'checked' : ''} style="width: 18px; height: 18px; min-width: 18px; max-width: 18px; margin: 0; padding: 0; margin-top: 2px; flex-shrink: 0; cursor: pointer;">
+                <input type="checkbox" name="councilTopicId" value="${topic.id}" ${currentIds.has(String(topic.id)) ? 'checked' : ''} style="width: 18px; height: 18px; min-width: 18px; max-width: 18px; margin: 0; padding: 0; margin-top: 2px; flex-shrink: 0; cursor: pointer;">
                 <span style="font-size: 13.5px; color: #1e293b;"><strong>${escapeText(topic.code || `DT${String(topic.id).padStart(3, '0')}`)}</strong> — ${escapeText(topic.titleVi || topic.title || '')}</span>
             </label>
         `).join('') || '<span style="color: #64748b;">Đợt này chưa có đề tài.</span>';
