@@ -1,6 +1,8 @@
 // Trang cá nhân giảng viên: GET /api/auth/me
 
 const ROLE_LABELS = {
+    ROLE_ADMIN: 'Quản trị viên',
+    ROLE_DEAN: 'Trưởng khoa',
     ROLE_LECTURER: 'Giảng viên',
     ROLE_DEPARTMENT_HEAD: 'Trưởng bộ môn',
     ROLE_STUDENT: 'Sinh viên'

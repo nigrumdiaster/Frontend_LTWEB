@@ -49,6 +49,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const topics = (c.assignedTopics || []).map(a => {
                 const ownTopic = me && (String(a.primaryAdvisorId) === String(me.id));
                 const actions = [];
+                actions.push(`<button type="button" class="btn btn-secondary btn-sm" onclick="showCouncilGrades(${c.id}, ${a.topicId})">Điểm thành viên</button>`);
                 if (mem && !ownTopic) actions.push(`<button type="button" class="btn btn-primary btn-sm" onclick="gradeCouncil(${c.id}, ${a.topicId})">Chấm điểm</button>`);
                 if (amChair && !ownTopic) actions.push(`<button type="button" class="btn btn-secondary btn-sm" onclick="finalizeTopic(${c.id}, ${a.topicId})">Chốt kết quả</button>`);
                 actions.push(`<button type="button" class="btn btn-secondary btn-sm" onclick="showTopicResult(${a.topicId})">Kết quả</button>`);
@@ -95,16 +96,38 @@ document.addEventListener('DOMContentLoaded', () => {
         return c && (c.assignedTopics || []).find(a => a.topicId === topicId);
     }
 
-    window.gradeCouncil = function (councilId, topicId) {
+    async function loadCouncilGrades(topicId) {
+        const { ok, result } = await callAPI(`/grades/topic/${encodeURIComponent(topicId)}`, { method: 'GET' });
+        if (!ok || !Array.isArray(result.data)) {
+            await showAlert(result.message || 'Không thể tải điểm thành viên hội đồng.');
+            return null;
+        }
+        return result.data.filter(grade => ['COUNCIL_CHAIRMAN', 'COUNCIL_SECRETARY', 'COUNCIL_MEMBER'].includes(grade.graderRole));
+    }
+
+    window.showCouncilGrades = async function (councilId, topicId) {
+        const assignment = findTopic(councilId, topicId);
+        if (!assignment) return;
+        const grades = await loadCouncilGrades(topicId);
+        if (!grades) return;
+        const council = councils.find(item => item.id === councilId);
+        openInfoModal('Điểm thành viên hội đồng', `<p><strong>${escapeHtml(assignment.topicCode || '')} - ${escapeHtml(assignment.topicTitleVi || '')}</strong></p>${renderCouncilGrades(council, grades)}`);
+    };
+
+    window.gradeCouncil = async function (councilId, topicId) {
         const a = findTopic(councilId, topicId);
         if (!a) return;
+        const grades = await loadCouncilGrades(topicId);
+        if (!grades) return;
+        const mine = grades.find(grade => me && String(grade.graderId) === String(me.id));
+        const council = councils.find(item => item.id === councilId);
         openPromptModal({
             title: 'Chấm điểm hội đồng',
-            sub: `<strong>${escapeHtml(a.topicCode || '')} - ${escapeHtml(a.topicTitleVi || '')}</strong><br>Nhóm: ${escapeHtml(a.studentGroupName || '-')}`,
+            sub: `<strong>${escapeHtml(a.topicCode || '')} - ${escapeHtml(a.topicTitleVi || '')}</strong><br>Nhóm: ${escapeHtml(a.studentGroupName || '-')}<p>Người chấm hiện tại: <strong>${escapeHtml(me?.fullName || me?.name || me?.username || '-')}</strong></p>${renderCouncilGrades(council, grades)}`,
             submitText: 'Lưu điểm',
             fields: [
-                { name: 'score', label: 'Điểm (thang 10)', type: 'number', required: true, min: 0, max: 10, step: 0.1 },
-                { name: 'feedback', label: 'Nhận xét', type: 'textarea' }
+                { name: 'score', label: 'Điểm (thang 10)', type: 'number', required: true, min: 0, max: 10, step: 0.1, value: mine?.score ?? '' },
+                { name: 'feedback', label: 'Nhận xét', type: 'textarea', value: mine?.feedback ?? '' }
             ],
             onSubmit: async (v) => {
                 const body = { topicId, score: v.score };
@@ -183,3 +206,19 @@ document.addEventListener('DOMContentLoaded', () => {
         showError(error.message || 'Không thể tải danh sách đợt đăng ký.');
     });
 });
+
+function renderCouncilGrades(council, grades) {
+    const rows = (council.members || []).map(member => {
+        const grade = grades.find(item => String(item.graderId) === String(member.lecturerId));
+        return `<tr>
+            <td style="padding:8px;">${escapeHtml(member.lecturerName || grade?.graderName || '-')}</td>
+            <td style="padding:8px;">${escapeHtml(councilRoleLabel(member.councilRole))}</td>
+            <td style="padding:8px;">${grade?.score != null ? fmtScore(grade.score) : 'Chưa chấm'}</td>
+            <td style="padding:8px;">${escapeHtml(grade?.feedback || '-')}</td>
+        </tr>`;
+    }).join('');
+    return `<div style="overflow-x:auto; margin:12px 0;"><table style="width:100%; border-collapse:collapse; font-size:14px;">
+        <thead><tr><th>Người chấm</th><th>Vai trò</th><th>Điểm</th><th>Nhận xét</th></tr></thead>
+        <tbody>${rows || '<tr><td colspan="4">Chưa có thành viên hội đồng.</td></tr>'}</tbody>
+    </table></div>`;
+}

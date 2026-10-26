@@ -101,6 +101,7 @@ function councilRoleLabel(role) {
 }
 
 const GRADER_ROLE_LABELS = {
+    COUNCIL_CHAIRMAN: 'Chủ tịch hội đồng', COUNCIL_SECRETARY: 'Thư ký hội đồng',
     ADVISOR: 'GVHD', REVIEWER: 'GVPB', COUNCIL_MEMBER: 'Thành viên hội đồng', COUNCIL: 'Hội đồng',
     CHAIRMAN: 'Chủ tịch hội đồng', CHAIR: 'Chủ tịch hội đồng', SECRETARY: 'Thư ký hội đồng', MEMBER: 'Thành viên hội đồng'
 };

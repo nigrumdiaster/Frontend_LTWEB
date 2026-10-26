@@ -489,9 +489,36 @@ if (document.readyState === 'loading') {
     initializeSearchableSelects();
 }
 
+async function initializePortalSwitch(sidebar) {
+    const inAdmin = window.location.pathname.includes('/admin/');
+    const inLecturer = window.location.pathname.includes('/lecturer/');
+    if (!inAdmin && !inLecturer) return;
+    if (inAdmin && !await adminAccess) return;
+    if (inLecturer) {
+        let user;
+        try { user = JSON.parse(localStorage.getItem('user')); } catch { return; }
+        if (!['ROLE_ADMIN', 'ROLE_DEAN'].includes(user?.role)) return;
+    }
+    if (sidebar.querySelector('[data-portal-switch]')) return;
+    const menu = document.createElement('ul');
+    menu.className = 'sidebar-menu';
+    menu.dataset.portalSwitch = 'true';
+    const item = document.createElement('li');
+    item.className = 'sidebar-menu-item';
+    const link = document.createElement('a');
+    link.href = inAdmin ? '../lecturer/profile.html' : '../admin/profile.html';
+    const icon = document.createElement('span');
+    icon.textContent = inAdmin ? '👨‍🏫' : '⚙️';
+    link.append(icon, inAdmin ? ' Cổng giảng viên' : ' Cổng quản trị');
+    item.append(link);
+    menu.append(item);
+    sidebar.querySelector('.sidebar-menu')?.before(menu);
+}
+
 function initializeResponsiveLayout() {
     const sidebar = document.querySelector('.sidebar');
     if (sidebar) {
+        initializePortalSwitch(sidebar);
         sidebar.id ||= 'portal-navigation';
         const toolbar = document.createElement('div');
         toolbar.className = 'mobile-toolbar';
